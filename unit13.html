@@ -1,0 +1,158 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 13</title><style>
+:root{--bg:#0f172a;--panel:#1e293b;--text:#f8fafc;--muted:#94a3b8;--line:#334155;--blue:#3b82f6;--blue-light:#60a5fa;--success:#22c55e;--danger:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Segoe UI,Tahoma,sans-serif;color:var(--text);background:var(--bg);padding:16px;transition:background .2s}
+main{width:min(1100px,100%);margin:0 auto;transition:max-width .2s}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.header-left{flex:1;min-width:200px}h1{margin:0;font-size:26px;color:var(--blue-light)}.stats{display:flex;gap:8px;align-items:center}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px;color:var(--blue-light)}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;color:var(--text);font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#334155}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.good{background:#14532d;color:var(--success);border-color:#166534}button.hard{background:#7f1d1d;color:var(--danger);border-color:#991b1b}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px;transition:grid-template-columns .2s}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.progress{height:8px;background:#0f172a;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#1e293b;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(255,255,255,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#334155;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#1e293b;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--text)}.row span{color:var(--muted)}
+
+/* Egész képernyős mód */
+body.fs-mode{background:#0b0f19;padding-top:40px}
+body.fs-mode main{width:min(750px,100%)}
+body.fs-mode header .header-left, body.fs-mode aside{display:none !important}
+body.fs-mode .layout{grid-template-columns:1fr}
+#fsToggle{font-weight:bold;border-color:var(--blue);color:var(--blue-light)}
+body.fs-mode #fsToggle{background:var(--blue);color:#fff}
+</style></head><body><main><header><div class="header-left"><h1>Unit 13 - Nature</h1></div><section class="stats"><button id="fsToggle" title="Teljes képernyő (F gomb)">⛶ Egész képernyő</button><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {id:0,en:"frog",hu:"béka",topic:"Animals"},{id:1,en:"salamander",hu:"szalamandra",topic:"Animals"},
+  {id:2,en:"crow",hu:"varjú",topic:"Animals"},{id:3,en:"eagle",hu:"sas",topic:"Animals"},{id:4,en:"owl",hu:"bagoly",topic:"Animals"},{id:5,en:"parrot",hu:"papagáj",topic:"Animals"},{id:6,en:"pigeon",hu:"galamb",topic:"Animals"},{id:7,en:"seagull",hu:"sirály",topic:"Animals"},{id:8,en:"stork",hu:"gólya",topic:"Animals"},{id:9,en:"swan",hu:"hattyú",topic:"Animals"},
+  {id:10,en:"cock",hu:"kakas",topic:"Animals"},{id:11,en:"cow",hu:"tehén",topic:"Animals"},{id:12,en:"duck",hu:"kacsa",topic:"Animals"},{id:13,en:"goose / geese",hu:"lúd / ludak",topic:"Animals"},{id:14,en:"goat",hu:"kecske",topic:"Animals"},{id:15,en:"hen",hu:"tyúk",topic:"Animals"},{id:16,en:"pig",hu:"sertés",topic:"Animals"},{id:17,en:"sheep",hu:"juh",topic:"Animals"},{id:18,en:"turkey",hu:"pulyka",topic:"Animals"},
+  {id:19,en:"dolphin",hu:"delfin",topic:"Animals"},{id:20,en:"shark",hu:"cápa",topic:"Animals"},{id:21,en:"sea turtle",hu:"tengeri teknős",topic:"Animals"},{id:22,en:"seal",hu:"fóka",topic:"Animals"},{id:23,en:"whale",hu:"bálna",topic:"Animals"},
+  {id:24,en:"endangered species",hu:"veszélyeztetett fajok",topic:"Animals"},
+  {id:25,en:"alligator",hu:"alligátor",topic:"Animals"},{id:26,en:"crocodile",hu:"krokodil",topic:"Animals"},{id:27,en:"lizard",hu:"gyík",topic:"Animals"},{id:28,en:"snake",hu:"kígyó",topic:"Animals"},{id:29,en:"tortoise",hu:"szárazföldi teknős",topic:"Animals"},{id:30,en:"turtle",hu:"tengeri teknősbéka",topic:"Animals"},
+  {id:31,en:"ant",hu:"hangya",topic:"Animals"},{id:32,en:"bee",hu:"méh",topic:"Animals"},{id:33,en:"butterfly",hu:"pillangó",topic:"Animals"},{id:34,en:"fly",hu:"légy",topic:"Animals"},{id:35,en:"grasshopper",hu:"szöcske",topic:"Animals"},{id:36,en:"mosquito",hu:"szúnyog",topic:"Animals"},{id:37,en:"wasp",hu:"darázs",topic:"Animals"},
+  {id:38,en:"bear",hu:"medve",topic:"Animals"},{id:39,en:"deer",hu:"szarvas",topic:"Animals"},{id:40,en:"fox",hu:"róka",topic:"Animals"},{id:41,en:"giraffe",hu:"zsiráf",topic:"Animals"},{id:42,en:"hippo",hu:"víziló",topic:"Animals"},{id:43,en:"kangaroo",hu:"kenguru",topic:"Animals"},{id:44,en:"squirrel",hu:"mókus",topic:"Animals"},{id:45,en:"wolf",hu:"farkas",topic:"Animals"},
+  {id:46,en:"beak",hu:"csőr",topic:"Animals"},{id:47,en:"claw",hu:"karom",topic:"Animals"},{id:48,en:"feather",hu:"toll",topic:"Animals"},{id:49,en:"fur",hu:"szőr",topic:"Animals"},{id:50,en:"jaw",hu:"állkapocs",topic:"Animals"},{id:51,en:"paw",hu:"mancs",topic:"Animals"},{id:52,en:"whisker",hu:"bajusz (állaté)",topic:"Animals"},{id:53,en:"animal shelter",hu:"állatmenhely",topic:"Animals"},
+  {id:54,en:"plant",hu:"növény",topic:"Plants"},{id:55,en:"bush",hu:"bokor",topic:"Plants"},{id:56,en:"flower",hu:"virág",topic:"Plants"},{id:57,en:"oak",hu:"tölgyfa",topic:"Plants"},{id:58,en:"palm tree",hu:"pálmafa",topic:"Plants"},{id:59,en:"pine",hu:"fenyő(fa)",topic:"Plants"},{id:60,en:"leaf",hu:"levél",topic:"Plants"},{id:61,en:"trunk",hu:"törzs",topic:"Plants"},{id:62,en:"branch",hu:"ág",topic:"Plants"},{id:63,en:"daffodil",hu:"nárcisz",topic:"Plants"},{id:64,en:"daisy",hu:"százszorszép / margaréta",topic:"Plants"},{id:65,en:"lily",hu:"liliom",topic:"Plants"},{id:66,en:"poppy",hu:"pipacs",topic:"Plants"},{id:67,en:"sunflower",hu:"napraforgó",topic:"Plants"},{id:68,en:"tulip",hu:"tulipán",topic:"Plants"},{id:69,en:"violet",hu:"ibolya",topic:"Plants"},{id:70,en:"petal",hu:"szirom",topic:"Plants"},{id:71,en:"root",hu:"gyökér",topic:"Plants"},
+  {id:72,en:"climate",hu:"éghajlat",topic:"Climate and the weather"},{id:73,en:"weather",hu:"időjárás",topic:"Climate and the weather"},{id:74,en:"cool",hu:"hűvös",topic:"Climate and the weather"},{id:75,en:"cold",hu:"hideg",topic:"Climate and the weather"},{id:76,en:"warm",hu:"meleg",topic:"Climate and the weather"},{id:77,en:"hot",hu:"forró",topic:"Climate and the weather"},{id:78,en:"chilly",hu:"csípős hideg",topic:"Climate and the weather"},{id:79,en:"freezing cold",hu:"dermesztő hideg",topic:"Climate and the weather"},{id:80,en:"boiling hot",hu:"rekkenő hőség",topic:"Climate and the weather"},{id:81,en:"breeze",hu:"szellő",topic:"Climate and the weather"},{id:82,en:"wind",hu:"szél",topic:"Climate and the weather"},{id:83,en:"snowdrift",hu:"hófúvás",topic:"Climate and the weather"},{id:84,en:"storm",hu:"vihar",topic:"Climate and the weather"},{id:85,en:"thunder",hu:"dörgés",topic:"Climate and the weather"},{id:86,en:"lightning",hu:"villám",topic:"Climate and the weather"},{id:87,en:"improve",hu:"javul",topic:"Climate and the weather"},{id:88,en:"deteriorate",hu:"romlik",topic:"Climate and the weather"},{id:89,en:"rainbow",hu:"szivárvány",topic:"Climate and the weather"},{id:90,en:"temperature above zero",hu:"pluszfok",topic:"Climate and the weather"},{id:91,en:"temperature below zero",hu:"mínusz fok",topic:"Climate and the weather"},{id:92,en:"weather forecast",hu:"időjárás előrejelzés",topic:"Climate and the weather"},{id:93,en:"fog",hu:"köd",topic:"Climate and the weather"},{id:94,en:"downpour",hu:"felhőszakadás",topic:"Climate and the weather"},{id:95,en:"drizzle",hu:"szitáló eső",topic:"Climate and the weather"},{id:96,en:"hail",hu:"jégeső",topic:"Climate and the weather"},{id:97,en:"showers",hu:"záporok / zivatarok",topic:"Climate and the weather"},{id:98,en:"sleet",hu:"dara / havas eső",topic:"Climate and the weather"},{id:99,en:"wet",hu:"nedves",topic:"Climate and the weather"},{id:100,en:"dry",hu:"száraz",topic:"Climate and the weather"},{id:101,en:"humid",hu:"párás",topic:"Climate and the weather"},{id:102,en:"mild",hu:"enyhe",topic:"Climate and the weather"},{id:103,en:"cloudy",hu:"felhős",topic:"Climate and the weather"},{id:104,en:"sunny",hu:"napos",topic:"Climate and the weather"},{id:105,en:"windy",hu:"szeles",topic:"Climate and the weather"},{id:106,en:"foggy",hu:"ködös",topic:"Climate and the weather"},{id:107,en:"rainy",hu:"esős",topic:"Climate and the weather"},{id:108,en:"stormy",hu:"viharos idő",topic:"Climate and the weather"},{id:109,en:"heat",hu:"hőség",topic:"Climate and the weather"},{id:110,en:"heatwave",hu:"hőhullám",topic:"Climate and the weather"},{id:111,en:"frost",hu:"fagy",topic:"Climate and the weather"},{id:112,en:"ground frost",hu:"talajmenti fagy",topic:"Climate and the weather"},
+  {id:113,en:"mountain",hu:"hegy",topic:"Landscape and geographical features"},{id:114,en:"mountain range",hu:"hegyvonulat",topic:"Landscape and geographical features"},{id:115,en:"volcano",hu:"vulkán",topic:"Landscape and geographical features"},{id:116,en:"cave",hu:"barlang",topic:"Landscape and geographical features"},{id:117,en:"coast",hu:"(tenger)part / partvidék",topic:"Landscape and geographical features"},{id:118,en:"desert",hu:"sivatag",topic:"Landscape and geographical features"},{id:119,en:"coral reef",hu:"korallzátony",topic:"Landscape and geographical features"},{id:120,en:"field",hu:"rét",topic:"Landscape and geographical features"},{id:121,en:"beautiful / picturesque / breathtaking countryside",hu:"gyönyörű / festői / lélegzetelállító szépségű vidék",topic:"Landscape and geographical features"},{id:122,en:"rainforest",hu:"esőerdő",topic:"Landscape and geographical features"},{id:123,en:"valley",hu:"völgy",topic:"Landscape and geographical features"},{id:124,en:"iceberg",hu:"jéghegy",topic:"Landscape and geographical features"},{id:125,en:"spring",hu:"forrás",topic:"Landscape and geographical features"},{id:126,en:"river",hu:"folyó",topic:"Landscape and geographical features"},{id:127,en:"sea / ocean",hu:"tenger / óceán",topic:"Landscape and geographical features"},{id:128,en:"waterfall",hu:"vízesés",topic:"Landscape and geographical features"},{id:129,en:"rural / urban",hu:"vidéki / városi",topic:"Landscape and geographical features"},{id:130,en:"barren",hu:"kopár",topic:"Landscape and geographical features"},{id:131,en:"diverse",hu:"változatos",topic:"Landscape and geographical features"},{id:132,en:"lush",hu:"buja",topic:"Landscape and geographical features"},{id:133,en:"captivating",hu:"elragadó",topic:"Landscape and geographical features"},{id:134,en:"stunning",hu:"káprázatos",topic:"Landscape and geographical features"},
+  {id:135,en:"avalanche",hu:"lavina",topic:"Natural disasters"},{id:136,en:"drought",hu:"aszály",topic:"Natural disasters"},{id:137,en:"earthquake",hu:"földrengés",topic:"Natural disasters"},{id:138,en:"flood / flooding",hu:"árvíz / áradás",topic:"Natural disasters"},{id:139,en:"forest fire",hu:"erdőtűz",topic:"Natural disasters"},{id:140,en:"hurricane",hu:"hurrikán",topic:"Natural disasters"},{id:141,en:"tsunami",hu:"szökőár / cunami",topic:"Natural disasters"},{id:142,en:"volcanic eruption",hu:"vulkánkitörés",topic:"Natural disasters"},
+  {id:143,en:"galaxy",hu:"csillagrendszer / galaxis",topic:"The Universe"},{id:144,en:"space",hu:"világűr",topic:"The Universe"},{id:145,en:"solar system",hu:"naprendszer",topic:"The Universe"},{id:146,en:"star",hu:"csillag",topic:"The Universe"},{id:147,en:"planet",hu:"bolygó",topic:"The Universe"},{id:148,en:"asteroid",hu:"kisbolygó",topic:"The Universe"},{id:149,en:"meteorite",hu:"meteorit",topic:"The Universe"},{id:150,en:"comet",hu:"üstökös",topic:"The Universe"},{id:151,en:"black hole",hu:"fekete lyuk",topic:"The Universe"},{id:152,en:"Earth",hu:"Föld",topic:"The Universe"},{id:153,en:"Moon",hu:"Hold",topic:"The Universe"},
+  {id:154,en:"environment",hu:"környezet",topic:"Environmental protection"},{id:155,en:"environmentally friendly",hu:"környezetbarát",topic:"Environmental protection"},{id:156,en:"acid rain",hu:"savas eső",topic:"Environmental protection"},{id:157,en:"carbon dioxide",hu:"szén-dioxid",topic:"Environmental protection"},{id:158,en:"deforestation",hu:"erdőirtás",topic:"Environmental protection"},{id:159,en:"die out / become extinct",hu:"kihal",topic:"Environmental protection"},{id:160,en:"destruction",hu:"pusztítás / rombolás",topic:"Environmental protection"},{id:161,en:"emit",hu:"kibocsát / kiáraszt",topic:"Environmental protection"},{id:162,en:"emissions",hu:"kibocsátás / kisugárzás",topic:"Environmental protection"},{id:163,en:"greenhouse effect",hu:"üvegházhatás",topic:"Environmental protection"},{id:164,en:"global warming",hu:"globális felmelegedés",topic:"Environmental protection"},{id:165,en:"natural habitat",hu:"természetes élőhely",topic:"Environmental protection"},{id:166,en:"oil spill",hu:"olajszennyezés",topic:"Environmental protection"},{id:167,en:"overfishing",hu:"túlhalászat",topic:"Environmental protection"},{id:168,en:"overpopulation",hu:"túlnépesedés",topic:"Environmental protection"},{id:169,en:"ozone layer",hu:"ózonréteg",topic:"Environmental protection"},{id:170,en:"ozone hole",hu:"ózonlyuk",topic:"Environmental protection"},{id:171,en:"pollution",hu:"szennyezés",topic:"Environmental protection"},{id:172,en:"recycle",hu:"újrahasznosít",topic:"Environmental protection"},{id:173,en:"sewage",hu:"szennyvíz",topic:"Environmental protection"},{id:174,en:"renewable / alternative source of energy",hu:"megújuló / alternatív energiaforrás",topic:"Environmental protection"},{id:175,en:"smog",hu:"szmog",topic:"Environmental protection"},{id:176,en:"rubbish / rubbish dump",hu:"szemét / szeméttelep",topic:"Environmental protection"},{id:177,en:"soil",hu:"talaj",topic:"Environmental protection"},{id:178,en:"wildlife",hu:"vadvilág",topic:"Environmental protection"},{id:179,en:"wilderness",hu:"vadon",topic:"Environmental protection"},{id:180,en:"threat",hu:"fenyegetés",topic:"Environmental protection"},{id:181,en:"danger",hu:"veszély",topic:"Environmental protection"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fsToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u13-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function toggleFullscreen(){
+  document.body.classList.toggle('fs-mode');
+  if(document.body.classList.contains('fs-mode')){
+    els.fs.textContent='🗗 Normál nézet';
+  }else{
+    els.fs.textContent='⛶ Egész képernyő';
+  }
+}
+els.fs.onclick=toggleFullscreen;
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered();
+  if(list.length && idx>=list.length)idx=0;
+  const c=list[idx]||list[0];
+  
+  els.f.innerHTML='';
+  ["Mind","Animals","Plants","Climate and the weather","Landscape and geographical features","Natural disasters","The Universe","Environmental protection"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+  if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+};
+render();
+</script></body></html>

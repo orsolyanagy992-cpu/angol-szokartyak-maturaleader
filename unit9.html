@@ -1,0 +1,274 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 9</title><style>
+:root{--ink:#2e1065;--muted:#6b7280;--line:#d8b4fe;--panel:#fff;--purple:#7c3aed;--purple-light:#f3e8ff;--green:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#f3e8ff;padding:16px;transition:background .2s}
+main{width:min(1100px,100%);margin:0 auto;transition:max-width .2s}header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.header-left{flex:1;min-width:200px}h1{margin:0;font-size:28px}.stats{display:flex;gap:8px;align-items:center}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#f3e8ff}button.primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+button.good{background:#eafaf1;color:var(--green);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px;transition:grid-template-columns .2s}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(124,58,237,0.05)}
+.progress{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--purple);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(124,58,237,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#f3e8ff;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:var(--purple-light);color:#6d28d9;border-color:#ddd6fe}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+
+/* Egész képernyős mód stílusai */
+body.fs-mode{background:#faf5ff;padding-top:40px}
+body.fs-mode main{width:min(750px,100%)}
+body.fs-mode header .header-left, body.fs-mode aside{display:none !important}
+body.fs-mode .layout{grid-template-columns:1fr}
+#fsToggle{font-weight:bold;border-color:var(--purple);color:var(--purple)}
+body.fs-mode #fsToggle{background:var(--purple);color:#fff}
+</style></head><body><main><header><div class="header-left"><h1>Unit 9 - Art and culture</h1></div><section class="stats"><button id="fsToggle" title="Teljes képernyő (F gomb)">⛶ Egész képernyő</button><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"(art) gallery","hu":"képtár / galéria","topic":"Art and culture"},
+  {"id":1,"en":"artist","hu":"művész","topic":"Art and culture"},
+  {"id":2,"en":"canvas","hu":"vászon / olajfestmény","topic":"Art and culture"},
+  {"id":3,"en":"collection","hu":"gyűjtemény","topic":"Art and culture"},
+  {"id":4,"en":"contemporary","hu":"kortárs","topic":"Art and culture"},
+  {"id":5,"en":"culture / cultural","hu":"kultúra / kulturális","topic":"Art and culture"},
+  {"id":6,"en":"depict / depiction","hu":"ábrázol / ábrázolás","topic":"Art and culture"},
+  {"id":7,"en":"entertain / entertainment","hu":"szórakoztat / szórakoztatás","topic":"Art and culture"},
+  {"id":8,"en":"exhibit","hu":"kiállít (ige) / kiállítási tárgy (főnév)","topic":"Art and culture"},
+  {"id":9,"en":"exhibition","hu":"kiállítás","topic":"Art and culture"},
+  {"id":10,"en":"frame","hu":"keret / filmkocka","topic":"Art and culture"},
+  {"id":11,"en":"work / piece of art","hu":"műalkotás / műtárgy","topic":"Art and culture"},
+  {"id":12,"en":"genre","hu":"műfaj","topic":"Art and culture"},
+  {"id":13,"en":"landscape","hu":"tájkép","topic":"Art and culture"},
+  {"id":14,"en":"masterpiece","hu":"mestermű","topic":"Art and culture"},
+  {"id":15,"en":"oil painting","hu":"olajfestmény","topic":"Art and culture"},
+  {"id":16,"en":"portrait","hu":"portré / arckép","topic":"Art and culture"},
+  {"id":17,"en":"preview","hu":"szakmai bemutató / előzetes megtekintés","topic":"Art and culture"},
+  {"id":18,"en":"sculpture / statue","hu":"szobor","topic":"Art and culture"},
+  {"id":19,"en":"sculptor","hu":"szobrász","topic":"Art and culture"},
+  {"id":20,"en":"sketch","hu":"vázlat","topic":"Art and culture"},
+  {"id":21,"en":"still life","hu":"csendélet","topic":"Art and culture"},
+  {"id":22,"en":"eye-catching","hu":"szemet gyönyörködtető / figyelemfelkeltő","topic":"Műalkotás jellemzői"},
+  {"id":23,"en":"mesmerising","hu":"elbűvölő / megbabonázó","topic":"Műalkotás jellemzői"},
+  {"id":24,"en":"moving","hu":"megindító / megható","topic":"Műalkotás jellemzői"},
+  {"id":25,"en":"controversial","hu":"vitatott / ellentmondásos","topic":"Műalkotás jellemzői"},
+  {"id":26,"en":"predictable","hu":"kiszámítható","topic":"Műalkotás jellemzői"},
+  {"id":27,"en":"spectacular","hu":"látványos","topic":"Műalkotás jellemzői"},
+  {"id":28,"en":"striking","hu":"ütős / hatásos / feltűnő","topic":"Műalkotás jellemzői"},
+  {"id":29,"en":"TV channel","hu":"TV-adó / csatorna","topic":"Films"},
+  {"id":30,"en":"adaptation","hu":"adaptáció / átdolgozás","topic":"Films"},
+  {"id":31,"en":"box office","hu":"jegyiroda / jegypénztár","topic":"Films"},
+  {"id":32,"en":"box-office failure / flop","hu":"anyagi csőd / bukás (film)","topic":"Films"},
+  {"id":33,"en":"box-office hit / success","hu":"kasszasiker / siker (film)","topic":"Films"},
+  {"id":34,"en":"dubbed film","hu":"szinkronizált film","topic":"Films"},
+  {"id":35,"en":"give a glowing review","hu":"ragyogó / fenséges kritikát tesz közzé","topic":"Films"},
+  {"id":36,"en":"give a good / bad review","hu":"jó / rossz kritikát tesz közzé","topic":"Films"},
+  {"id":37,"en":"hero / character","hu":"hős / szereplő","topic":"Films"},
+  {"id":38,"en":"nominate for an award","hu":"díjra jelölnek valakit","topic":"Films"},
+  {"id":39,"en":"plot","hu":"cselekmény","topic":"Films"},
+  {"id":40,"en":"prequel","hu":"előző rész / előzményeket bemutató film","topic":"Films"},
+  {"id":41,"en":"sequel","hu":"folytatás (filmé)","topic":"Films"},
+  {"id":42,"en":"scene","hu":"jelenet","topic":"Films"},
+  {"id":43,"en":"screenplay / script","hu":"forgatókönyv","topic":"Films"},
+  {"id":44,"en":"shoot / make a film","hu":"filmet forgat","topic":"Films"},
+  {"id":45,"en":"stuntman / stuntwoman","hu":"kaszkadőr / dublőr","topic":"Films"},
+  {"id":46,"en":"subtitles","hu":"felirat","topic":"Films"},
+  {"id":47,"en":"the film is directed by...","hu":"a filmet ... rendezte","topic":"Films"},
+  {"id":48,"en":"the film is set in (place) in (time)","hu":"a film (valahol) (valamikor) játszódik","topic":"Films"},
+  {"id":49,"en":"trailer","hu":"előzetes (film)","topic":"Films"},
+  {"id":50,"en":"current affairs","hu":"aktuális politikai hírek / események","topic":"TV programmes"},
+  {"id":51,"en":"entertainment programme","hu":"szórakoztató műsor","topic":"TV programmes"},
+  {"id":52,"en":"live programme","hu":"élő adás","topic":"TV programmes"},
+  {"id":53,"en":"news / sports programme","hu":"hírek / sportműsor","topic":"TV programmes"},
+  {"id":54,"en":"phone-in","hu":"betelefonálós műsor","topic":"TV programmes"},
+  {"id":55,"en":"political debate","hu":"politikai vitaműsor","topic":"TV programmes"},
+  {"id":56,"en":"series","hu":"tévésorozat","topic":"TV programmes"},
+  {"id":57,"en":"sitcom","hu":"tévékomédia / helyzetkomikumra épülő sorozat","topic":"TV programmes"},
+  {"id":58,"en":"soap opera","hu":"szappanopera","topic":"TV programmes"},
+  {"id":59,"en":"weather forecast","hu":"időjárás-előrejelzés","topic":"TV programmes"},
+  {"id":60,"en":"(auto)biographical film","hu":"(ön)életrajzi film","topic":"Films"},
+  {"id":61,"en":"adventure film","hu":"kalandfilm","topic":"Films"},
+  {"id":62,"en":"cartoon","hu":"rajzfilm","topic":"Films"},
+  {"id":63,"en":"comedy","hu":"vígjáték","topic":"Films"},
+  {"id":64,"en":"detective film","hu":"krimi","topic":"Films"},
+  {"id":65,"en":"documentary film","hu":"dokumentumfilm","topic":"Films"},
+  {"id":66,"en":"educational film","hu":"ismeretterjesztő film","topic":"Films"},
+  {"id":67,"en":"film based on a true story","hu":"megtörtént eseményt feldolgozó film","topic":"Films"},
+  {"id":68,"en":"historical film","hu":"történelmi film","topic":"Films"},
+  {"id":69,"en":"nature film","hu":"természetfilm","topic":"Films"},
+  {"id":70,"en":"silent film","hu":"némafilm","topic":"Films"},
+  {"id":71,"en":"admission fee","hu":"belépődíj","topic":"Theatre"},
+  {"id":72,"en":"applause","hu":"taps","topic":"Theatre"},
+  {"id":73,"en":"audience","hu":"közönség","topic":"Theatre"},
+  {"id":74,"en":"audition","hu":"meghallgatás","topic":"Theatre"},
+  {"id":75,"en":"performance","hu":"előadás","topic":"Theatre"},
+  {"id":76,"en":"play","hu":"színdarab","topic":"Theatre"},
+  {"id":77,"en":"playwright","hu":"drámaíró","topic":"Theatre"},
+  {"id":78,"en":"choreography","hu":"koreográfia","topic":"Theatre"},
+  {"id":79,"en":"performing arts","hu":"előadóművészet","topic":"Theatre"},
+  {"id":80,"en":"puppet theatre","hu":"bábszínház","topic":"Theatre"},
+  {"id":81,"en":"rehearsal","hu":"próba","topic":"Theatre"},
+  {"id":82,"en":"row","hu":"sor","topic":"Theatre"},
+  {"id":83,"en":"stage / perform","hu":"színre visz / előad / szerepel","topic":"Theatre"},
+  {"id":84,"en":"stage fright","hu":"lámpaláz","topic":"Theatre"},
+  {"id":85,"en":"stage","hu":"színpad","topic":"Theatre"},
+  {"id":86,"en":"standing ovation","hu":"állva tapsolás / vastapssal ünneplés","topic":"Theatre"},
+  {"id":87,"en":"ballet","hu":"balett","topic":"Theatre"},
+  {"id":88,"en":"spectator","hu":"néző","topic":"Theatre"},
+  {"id":89,"en":"bookworm","hu":"könyvmoly","topic":"Literature"},
+  {"id":90,"en":"chapter","hu":"fejezet","topic":"Literature"},
+  {"id":91,"en":"character","hu":"szereplő","topic":"Literature"},
+  {"id":92,"en":"classical / contemporary / modern literature","hu":"klasszikus / kortárs / modern irodalom","topic":"Literature"},
+  {"id":93,"en":"fiction / non-fiction","hu":"szépirodalom / tényirodalom (dokumentumirodalom)","topic":"Literature"},
+  {"id":94,"en":"front / back cover","hu":"elülső borító / hátlap","topic":"Literature"},
+  {"id":95,"en":"poetry","hu":"költészet","topic":"Literature"},
+  {"id":96,"en":"poet","hu":"költő","topic":"Literature"},
+  {"id":97,"en":"(auto)biography","hu":"(ön)életrajz","topic":"Literature"},
+  {"id":98,"en":"crime / detective story","hu":"krimi / detektívtörténet","topic":"Literature"},
+  {"id":99,"en":"drama","hu":"színdarab / dráma","topic":"Literature"},
+  {"id":100,"en":"fairy tale","hu":"tündérmese / mese","topic":"Literature"},
+  {"id":101,"en":"historical novel","hu":"történelmi regény","topic":"Literature"},
+  {"id":102,"en":"love story","hu":"szerelmes történet / regény","topic":"Literature"},
+  {"id":103,"en":"novel","hu":"regény","topic":"Literature"},
+  {"id":104,"en":"science fiction","hu":"tudományos-fantasztikus (sci-fi)","topic":"Literature"},
+  {"id":105,"en":"short story","hu":"elbeszélés / novella","topic":"Literature"},
+  {"id":106,"en":"poem","hu":"vers","topic":"Literature"},
+  {"id":107,"en":"background music","hu":"háttérzene","topic":"Music"},
+  {"id":108,"en":"choir","hu":"kórus","topic":"Music"},
+  {"id":109,"en":"concert hall","hu":"koncertterem","topic":"Music"},
+  {"id":110,"en":"conduct / conductor","hu":"vezényel / karmester","topic":"Music"},
+  {"id":111,"en":"give a concert","hu":"koncertet ad","topic":"Music"},
+  {"id":112,"en":"go on tour","hu":"turnézik","topic":"Music"},
+  {"id":113,"en":"live performance","hu":"élő előadás","topic":"Music"},
+  {"id":114,"en":"lyrics","hu":"dalszöveg","topic":"Music"},
+  {"id":115,"en":"classical music","hu":"komolyzene","topic":"Music"},
+  {"id":116,"en":"piece of music / track","hu":"zeneszám / dal","topic":"Music"},
+  {"id":117,"en":"release an album / a single","hu":"kiad egy albumot / kislemezt (szólólemezt)","topic":"Music"},
+  {"id":118,"en":"remix","hu":"átdolgozás / átdolgoz","topic":"Music"},
+  {"id":119,"en":"hit","hu":"sláger / siker","topic":"Music"},
+  {"id":120,"en":"write / compose music","hu":"zenét ír / komponál","topic":"Music"},
+  {"id":121,"en":"orchestra","hu":"zenekar","topic":"Music"},
+  {"id":122,"en":"play the piano / guitar / drums","hu":"zongorázik / gitározik / dobol","topic":"Music"},
+  {"id":123,"en":"article","hu":"cikk","topic":"Press"},
+  {"id":124,"en":"column","hu":"rovat / oszlop","topic":"Press"},
+  {"id":125,"en":"daily newspaper / paper","hu":"napilap / újság","topic":"Press"},
+  {"id":126,"en":"issue","hu":"lapszám / példány","topic":"Press"},
+  {"id":127,"en":"journalist","hu":"újságíró","topic":"Press"},
+  {"id":128,"en":"editor","hu":"szerkesztő","topic":"Press"},
+  {"id":129,"en":"subscribe","hu":"újságra előfizet","topic":"Press"},
+  {"id":130,"en":"local / regional newspaper","hu":"helyi / regionális újság","topic":"Press"},
+  {"id":131,"en":"tabloid","hu":"bulvárlap","topic":"Press"},
+  {"id":132,"en":"weekly / monthly magazine","hu":"heti / havi képes újság (magazin)","topic":"Press"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fsToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u9-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function toggleFullscreen(){
+  document.body.classList.toggle('fs-mode');
+  if(document.body.classList.contains('fs-mode')){
+    els.fs.textContent='🗗 Normál nézet';
+  }else{
+    els.fs.textContent='⛶ Egész képernyő';
+  }
+}
+els.fs.onclick=toggleFullscreen;
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered();
+  if(list.length && idx>=list.length)idx=0;
+  const c=list[idx]||list[0];
+  
+  els.f.innerHTML='';
+  ["Mind","Art and culture","Műalkotás jellemzői","Films","TV programmes","Theatre","Literature","Music","Press"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+  if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+};
+render();
+</script></body></html>

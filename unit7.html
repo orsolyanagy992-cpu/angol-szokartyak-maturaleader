@@ -1,0 +1,276 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 7</title><style>
+:root{--ink:#292524;--muted:#78716c;--line:#e7e5e4;--panel:#fff;--orange:#ea580c;--orange-light:#ffedd5;--green:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#fff7ed;padding:16px;transition:background .2s}
+main{width:min(1100px,100%);margin:0 auto;transition:max-width .2s}header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.header-left{flex:1;min-width:200px}h1{margin:0;font-size:28px}.stats{display:flex;gap:8px;align-items:center}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#fff7ed}button.primary{background:var(--orange);color:#fff;border-color:var(--orange)}
+button.good{background:#eafaf1;color:var(--green);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px;transition:grid-template-columns .2s}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(234,88,12,0.05)}
+.progress{height:8px;background:#e7ebf2;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--orange);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(234,88,12,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#fff7ed;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:#ffedd5;color:#c2410c;border-color:#fed7aa}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+
+/* Egész képernyős mód stílusai */
+body.fs-mode{background:#fffaf5;padding-top:40px}
+body.fs-mode main{width:min(750px,100%)}
+body.fs-mode header .header-left, body.fs-mode aside{display:none !important}
+body.fs-mode .layout{grid-template-columns:1fr}
+#fsToggle{font-weight:bold;border-color:var(--orange);color:var(--orange)}
+body.fs-mode #fsToggle{background:var(--orange);color:#fff}
+</style></head><body><main><header><div class="header-left"><h1>Unit 7 - Shopping and Services</h1></div><section class="stats"><button id="fsToggle" title="Teljes képernyő (F gomb)">⛶ Egész képernyő</button><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"baker's","hu":"pékség","topic":"Types of shops and services"},
+  {"id":1,"en":"bookshop","hu":"könyvesbolt","topic":"Types of shops and services"},
+  {"id":2,"en":"butcher's","hu":"hentesüzlet / húsbolt","topic":"Types of shops and services"},
+  {"id":3,"en":"chemist's","hu":"gyógyszertár","topic":"Types of shops and services"},
+  {"id":4,"en":"clothes shop","hu":"ruhásbolt","topic":"Types of shops and services"},
+  {"id":5,"en":"department store","hu":"áruház","topic":"Types of shops and services"},
+  {"id":6,"en":"DIY shop","hu":"barkácsbolt, háztartási szaküzlet","topic":"Types of shops and services"},
+  {"id":7,"en":"dry cleaner's","hu":"ruhatisztító","topic":"Types of shops and services"},
+  {"id":8,"en":"electrical shop","hu":"elektronikai szaküzlet","topic":"Types of shops and services"},
+  {"id":9,"en":"flea market","hu":"bolhapiac","topic":"Types of shops and services"},
+  {"id":10,"en":"florist's","hu":"virágbolt","topic":"Types of shops and services"},
+  {"id":11,"en":"furniture shop","hu":"bútorbolt","topic":"Types of shops and services"},
+  {"id":12,"en":"gift shop","hu":"ajándékbolt","topic":"Types of shops and services"},
+  {"id":13,"en":"greengrocer's","hu":"zöldséges","topic":"Types of shops and services"},
+  {"id":14,"en":"grocer's","hu":"fűszeres","topic":"Types of shops and services"},
+  {"id":15,"en":"hairdresser's","hu":"fodrászat / fodrász","topic":"Types of shops and services"},
+  {"id":16,"en":"laundry","hu":"önkiszolgáló mosoda","topic":"Types of shops and services"},
+  {"id":17,"en":"market square / marketplace","hu":"piac","topic":"Types of shops and services"},
+  {"id":18,"en":"music shop","hu":"zenebolt, hangszerbolt","topic":"Types of shops and services"},
+  {"id":19,"en":"newsagent's","hu":"hírlapüzlet","topic":"Types of shops and services"},
+  {"id":20,"en":"optician's","hu":"látszerész, optikus","topic":"Types of shops and services"},
+  {"id":21,"en":"outdoor market","hu":"szabadtéri piac","topic":"Types of shops and services"},
+  {"id":22,"en":"pet shop","hu":"kisállat-kereskedés / bolt","topic":"Types of shops and services"},
+  {"id":23,"en":"post office","hu":"posta","topic":"Types of shops and services"},
+  {"id":24,"en":"public services","hu":"közszolgáltatások","topic":"Types of shops and services"},
+  {"id":25,"en":"second-hand shop","hu":"használt cikkek (ruhák) boltja","topic":"Types of shops and services"},
+  {"id":26,"en":"shoe shop","hu":"cipőbolt","topic":"Types of shops and services"},
+  {"id":27,"en":"shopping centre / mall","hu":"bevásárlóközpont","topic":"Types of shops and services"},
+  {"id":28,"en":"sports shop","hu":"sportbolt","topic":"Types of shops and services"},
+  {"id":29,"en":"stall / stand","hu":"árusítóasztal / bódé","topic":"Types of shops and services"},
+  {"id":30,"en":"stationer's","hu":"papírbolt","topic":"Types of shops and services"},
+  {"id":31,"en":"supermarket","hu":"élelmiszeráruház, ABC áruház","topic":"Types of shops and services"},
+  {"id":32,"en":"toy shop","hu":"játékbolt","topic":"Types of shops and services"},
+  {"id":33,"en":"transport service","hu":"szállítási szolgáltatás, áruszállítás","topic":"Types of shops and services"},
+  {"id":34,"en":"corner shop","hu":"sarki bolt","topic":"Describing a shop"},
+  {"id":35,"en":"local shop","hu":"helyi bolt","topic":"Describing a shop"},
+  {"id":36,"en":"duty-free shop","hu":"vámmentes bolt","topic":"Describing a shop"},
+  {"id":37,"en":"expensive shop","hu":"drága bolt","topic":"Describing a shop"},
+  {"id":38,"en":"well-stocked shop","hu":"jól ellátott bolt","topic":"Describing a shop"},
+  {"id":39,"en":"audio and video equipment","hu":"audio- és videofelszerelések","topic":"Products"},
+  {"id":40,"en":"beauty products","hu":"szépségápolási termékek, kozmetikai cikkek","topic":"Products"},
+  {"id":41,"en":"electrical appliances","hu":"elektromos eszközök","topic":"Products"},
+  {"id":42,"en":"hardware","hu":"vas- és fémáru","topic":"Products"},
+  {"id":43,"en":"household / domestic appliances","hu":"háztartási eszközök","topic":"Products"},
+  {"id":44,"en":"a wide range of products / services","hu":"termékek / szolgáltatások széles választéka","topic":"Products"},
+  {"id":45,"en":"jewellery","hu":"ékszer","topic":"Products"},
+  {"id":46,"en":"paper goods","hu":"papíráru","topic":"Products"},
+  {"id":47,"en":"stationery","hu":"papír-írószer termékek","topic":"Products"},
+  {"id":48,"en":"buy / sell wholesale","hu":"nagykereskedelmi vétel / eladás","topic":"Products"},
+  {"id":49,"en":"poor / top quality","hu":"gyenge minőség / csúcsminőség","topic":"Products"},
+  {"id":50,"en":"toiletries","hu":"piperecikkek / tisztálkodási szerek","topic":"Products"},
+  {"id":51,"en":"advertisement / advert / ad","hu":"reklám / hirdetés","topic":"Advertising"},
+  {"id":52,"en":"advertise","hu":"reklámoz, hirdet","topic":"Advertising"},
+  {"id":53,"en":"advertising agency","hu":"reklámügynökség","topic":"Advertising"},
+  {"id":54,"en":"commercial (radio / TV)","hu":"(rádió/TV) reklám","topic":"Advertising"},
+  {"id":55,"en":"banner","hu":"szalaghirdetés, banner","topic":"Advertising"},
+  {"id":56,"en":"billboard","hu":"hirdetőtábla","topic":"Advertising"},
+  {"id":57,"en":"brochure","hu":"prospektus","topic":"Advertising"},
+  {"id":58,"en":"leaflet / flier","hu":"szórólap","topic":"Advertising"},
+  {"id":59,"en":"radio spot","hu":"rövid rádióreklám","topic":"Advertising"},
+  {"id":60,"en":"place an advertisement","hu":"hirdetést ad fel","topic":"Advertising"},
+  {"id":61,"en":"commercial break","hu":"reklámszünet","topic":"Advertising"},
+  {"id":62,"en":"consumer","hu":"fogyasztó","topic":"Advertising"},
+  {"id":63,"en":"customer-friendly","hu":"vásárlóbarát","topic":"Advertising"},
+  {"id":64,"en":"slogan (catchy / popular)","hu":"(fülbemászó, frappáns / népszerű) szlogen","topic":"Advertising"},
+  {"id":65,"en":"samples (free)","hu":"(ingyenes) termékminta","topic":"Advertising"},
+  {"id":66,"en":"attract attention","hu":"felhívja a figyelmet","topic":"Advertising"},
+  {"id":67,"en":"good / bad advertisement for sth","hu":"valaminek jó / rossz hírverése","topic":"Advertising"},
+  {"id":68,"en":"label","hu":"címke","topic":"Advertising"},
+  {"id":69,"en":"publicity","hu":"nyilvánosság","topic":"Advertising"},
+  {"id":70,"en":"quality","hu":"minőség","topic":"Advertising"},
+  {"id":71,"en":"complain about","hu":"panaszt emel valami miatt, reklamál","topic":"Complaints"},
+  {"id":72,"en":"faulty product","hu":"hibás termék","topic":"Complaints"},
+  {"id":73,"en":"get a (full / partial) refund on","hu":"(teljes/részleges) visszatérítést / kártérítést kap","topic":"Complaints"},
+  {"id":74,"en":"guarantee","hu":"garancia, jótállás","topic":"Complaints"},
+  {"id":75,"en":"make a complaint","hu":"panaszt tesz, reklamál","topic":"Complaints"},
+  {"id":76,"en":"complaint","hu":"reklamáció","topic":"Complaints"},
+  {"id":77,"en":"replacement","hu":"csere","topic":"Complaints"},
+  {"id":78,"en":"exchange sth for sth else","hu":"kicserél egy árut egy másik árura","topic":"Complaints"},
+  {"id":79,"en":"afford","hu":"megengedheti magának (anyagilag)","topic":"Selling and buying"},
+  {"id":80,"en":"available","hu":"kapható","topic":"Selling and buying"},
+  {"id":81,"en":"bargain","hu":"alkalmi vétel","topic":"Selling and buying"},
+  {"id":82,"en":"be in stock","hu":"van raktáron / készleten","topic":"Selling and buying"},
+  {"id":83,"en":"be on special offer","hu":"akciós","topic":"Selling and buying"},
+  {"id":84,"en":"borrow","hu":"kölcsönvesz, kölcsönkér","topic":"Selling and buying"},
+  {"id":85,"en":"buy on credit","hu":"hitelre vásárol","topic":"Selling and buying"},
+  {"id":86,"en":"buy online","hu":"online vásárol","topic":"Selling and buying"},
+  {"id":87,"en":"chain of shops","hu":"üzletlánc","topic":"Selling and buying"},
+  {"id":88,"en":"checkout","hu":"pénztár","topic":"Selling and buying"},
+  {"id":89,"en":"coin","hu":"érme, fémpénz","topic":"Selling and buying"},
+  {"id":90,"en":"cost","hu":"költség / kerül valamennyibe","topic":"Selling and buying"},
+  {"id":91,"en":"counter","hu":"pult","topic":"Selling and buying"},
+  {"id":92,"en":"customer","hu":"vásárló","topic":"Selling and buying"},
+  {"id":93,"en":"decrease prices","hu":"csökkenti az árakat","topic":"Selling and buying"},
+  {"id":94,"en":"department","hu":"részleg, osztály","topic":"Selling and buying"},
+  {"id":95,"en":"dirt cheap","hu":"nagyon olcsó, potom pénzért","topic":"Selling and buying"},
+  {"id":96,"en":"discount","hu":"árengedmény","topic":"Selling and buying"},
+  {"id":97,"en":"fitting room","hu":"próbafülke","topic":"Selling and buying"},
+  {"id":98,"en":"do one's shopping / shop around","hu":"bevásárol / körülnéz a boltokban","topic":"Selling and buying"},
+  {"id":99,"en":"free of charge","hu":"ingyenes","topic":"Selling and buying"},
+  {"id":100,"en":"expensive / costly","hu":"drága / költséges","topic":"Selling and buying"},
+  {"id":101,"en":"high-priced / overpriced","hu":"magas árfekvésű / méregdrága","topic":"Selling and buying"},
+  {"id":102,"en":"get a discount on","hu":"árengedményt kap valamire","topic":"Selling and buying"},
+  {"id":103,"en":"get into debt","hu":"adósságba keveredik","topic":"Selling and buying"},
+  {"id":104,"en":"good purchase","hu":"jó vétel","topic":"Selling and buying"},
+  {"id":105,"en":"sold out","hu":"elfogyott (eladva)","topic":"Selling and buying"},
+  {"id":106,"en":"value for money","hu":"megéri az árát","topic":"Selling and buying"},
+  {"id":107,"en":"I have no change, I'm afraid.","hu":"Sajnos nincs apróm.","topic":"Selling and buying"},
+  {"id":108,"en":"label / price tag","hu":"árcímke, árucímke","topic":"Selling and buying"},
+  {"id":109,"en":"inexpensive / cut-price","hu":"nem drága / árleszállított","topic":"Selling and buying"},
+  {"id":110,"en":"low-cost / half-price","hu":"olcsó / félárú","topic":"Selling and buying"},
+  {"id":111,"en":"lend","hu":"kölcsönad, hitelez","topic":"Selling and buying"},
+  {"id":112,"en":"make a payment","hu":"fizet / befizet egy összeget","topic":"Selling and buying"},
+  {"id":113,"en":"means / forms of payment","hu":"fizetési módok","topic":"Selling and buying"},
+  {"id":114,"en":"on sale","hu":"kiárusítás","topic":"Selling and buying"},
+  {"id":115,"en":"pay by credit card / cheque","hu":"hitelkártyával / csekkel fizet","topic":"Selling and buying"},
+  {"id":116,"en":"pay in advance / in instalments","hu":"előre fizet / részletekben fizet","topic":"Selling and buying"},
+  {"id":117,"en":"pay in cash","hu":"készpénzzel fizet","topic":"Selling and buying"},
+  {"id":118,"en":"place an order / order","hu":"megrendel","topic":"Selling and buying"},
+  {"id":119,"en":"price","hu":"ár","topic":"Selling and buying"},
+  {"id":120,"en":"provide (excellent / poor) service","hu":"kiváló / gyenge szolgáltatást nyújt","topic":"Selling and buying"},
+  {"id":121,"en":"purchase","hu":"megvásárol, beszerez","topic":"Selling and buying"},
+  {"id":122,"en":"put up / increase prices","hu":"felemeli az árakat","topic":"Selling and buying"},
+  {"id":123,"en":"queue","hu":"sor / sorban áll","topic":"Selling and buying"},
+  {"id":124,"en":"receipt","hu":"blokk","topic":"Selling and buying"},
+  {"id":125,"en":"reduction","hu":"csökkentés","topic":"Selling and buying"},
+  {"id":126,"en":"shop assistant","hu":"bolti eladó","topic":"Selling and buying"},
+  {"id":127,"en":"shop owner","hu":"bolttulajdonos","topic":"Selling and buying"},
+  {"id":128,"en":"shopaholic","hu":"szenvedélyes vásárló","topic":"Selling and buying"},
+  {"id":129,"en":"shopping bag","hu":"bevásárlótáska","topic":"Selling and buying"},
+  {"id":130,"en":"shopping list","hu":"bevásárlólista","topic":"Selling and buying"},
+  {"id":131,"en":"shopping spree","hu":"vásárolgatás, plázázás","topic":"Selling and buying"},
+  {"id":132,"en":"shopping trolley","hu":"bevásárlókocsi","topic":"Selling and buying"},
+  {"id":133,"en":"spend money on","hu":"pénzt költ valamire","topic":"Selling and buying"},
+  {"id":134,"en":"window-shopping","hu":"kirakatnézegetés","topic":"Selling and buying"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fsToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u7-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function toggleFullscreen(){
+  document.body.classList.toggle('fs-mode');
+  if(document.body.classList.contains('fs-mode')){
+    els.fs.textContent='🗗 Normál nézet';
+  }else{
+    els.fs.textContent='⛶ Egész képernyő';
+  }
+}
+els.fs.onclick=toggleFullscreen;
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered();
+  if(list.length && idx>=list.length)idx=0;
+  const c=list[idx]||list[0];
+  
+  els.f.innerHTML='';
+  ["Mind","Types of shops and services","Describing a shop","Products","Advertising","Complaints","Selling and buying"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+  if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+};
+render();
+</script></body></html>

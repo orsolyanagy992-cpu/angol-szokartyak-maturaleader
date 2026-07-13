@@ -1,0 +1,284 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 11</title><style>
+:root{--ink:#064e3b;--muted:#4b5563;--line:#a7f3d0;--panel:#fff;--green:#059669;--green-light:#ecfdf5;--success:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#e6f4ea;padding:16px;transition:background .2s}
+main{width:min(1100px,100%);margin:0 auto;transition:max-width .2s}header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.header-left{flex:1;min-width:200px}h1{margin:0;font-size:28px}.stats{display:flex;gap:8px;align-items:center}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#e6f4ea}button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+button.good{background:#eafaf1;color:var(--success);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px;transition:grid-template-columns .2s}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(5,150,105,0.05)}
+.progress{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(5,150,105,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#e6f4ea;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:var(--green-light);color:#047857;border-color:#a7f3d0}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+
+/* Egész képernyős mód */
+body.fs-mode{background:#f0fdf4;padding-top:40px}
+body.fs-mode main{width:min(750px,100%)}
+body.fs-mode header .header-left, body.fs-mode aside{display:none !important}
+body.fs-mode .layout{grid-template-columns:1fr}
+#fsToggle{font-weight:bold;border-color:var(--green);color:var(--green)}
+body.fs-mode #fsToggle{background:var(--green);color:#fff}
+</style></head><body><main><header><div class="header-left"><h1>Unit 11 - Parts of the body, health and illnesses</h1></div><section class="stats"><button id="fsToggle" title="Teljes képernyő (F gomb)">⛶ Egész képernyő</button><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"brain","hu":"agy","topic":"Parts of the body"},
+  {"id":1,"en":"forehead","hu":"homlok","topic":"Parts of the body"},
+  {"id":2,"en":"eyebrow","hu":"szemöldök","topic":"Parts of the body"},
+  {"id":3,"en":"cheek","hu":"arc","topic":"Parts of the body"},
+  {"id":4,"en":"chin","hu":"áll","topic":"Parts of the body"},
+  {"id":5,"en":"chest","hu":"mellkas","topic":"Parts of the body"},
+  {"id":6,"en":"elbow","hu":"könyök","topic":"Parts of the body"},
+  {"id":7,"en":"wrist","hu":"csukló","topic":"Parts of the body"},
+  {"id":8,"en":"mouth","hu":"száj","topic":"Parts of the body"},
+  {"id":9,"en":"heart","hu":"szív","topic":"Parts of the body"},
+  {"id":10,"en":"lungs","hu":"tüdő","topic":"Parts of the body"},
+  {"id":11,"en":"back","hu":"hát","topic":"Parts of the body"},
+  {"id":12,"en":"stomach / tummy / belly","hu":"has / gyomor","topic":"Parts of the body"},
+  {"id":13,"en":"thigh","hu":"comb","topic":"Parts of the body"},
+  {"id":14,"en":"knee","hu":"térd","topic":"Parts of the body"},
+  {"id":15,"en":"ankle","hu":"boka","topic":"Parts of the body"},
+  {"id":16,"en":"toe","hu":"lábujj","topic":"Parts of the body"},
+  {"id":17,"en":"throat","hu":"torok","topic":"Parts of the body"},
+  {"id":18,"en":"bone","hu":"csont","topic":"Parts of the body"},
+  {"id":19,"en":"muscle","hu":"izom","topic":"Parts of the body"},
+  {"id":20,"en":"skin","hu":"bőr","topic":"Parts of the body"},
+  {"id":21,"en":"blood","hu":"vér","topic":"Parts of the body"},
+  {"id":22,"en":"break","hu":"eltör / törés","topic":"Accidents"},
+  {"id":23,"en":"burn","hu":"égés / megéget","topic":"Accidents"},
+  {"id":24,"en":"bruise","hu":"zúzódás / horzsolás","topic":"Accidents"},
+  {"id":25,"en":"cut","hu":"vágás / megvág","topic":"Accidents"},
+  {"id":26,"en":"dislocate","hu":"kificamít","topic":"Accidents"},
+  {"id":27,"en":"fracture","hu":"törés / repedés","topic":"Accidents"},
+  {"id":28,"en":"sprain","hu":"kificamít / ficam","topic":"Accidents"},
+  {"id":29,"en":"twist","hu":"kifordul / kicsavarodik","topic":"Accidents"},
+  {"id":30,"en":"X-ray","hu":"röntgen","topic":"Accidents"},
+  {"id":31,"en":"wound","hu":"seb","topic":"Accidents"},
+  {"id":32,"en":"injure","hu":"megsérül","topic":"Accidents"},
+  {"id":33,"en":"injury","hu":"sérülés","topic":"Accidents"},
+  {"id":34,"en":"pain","hu":"fájdalom","topic":"Accidents"},
+  {"id":35,"en":"hurt","hu":"sérülés / fáj / megsért","topic":"Accidents"},
+  {"id":36,"en":"heal","hu":"gyógyít / gyógyul","topic":"Accidents"},
+  {"id":37,"en":"come round","hu":"magához tér","topic":"Accidents"},
+  {"id":38,"en":"lose consciousness","hu":"elveszíti az eszméletét","topic":"Accidents"},
+  {"id":39,"en":"regain consciousness","hu":"visszanyeri az eszméletét","topic":"Accidents"},
+  {"id":40,"en":"have a leg in plaster","hu":"begipszelt lába van","topic":"Accidents"},
+  {"id":41,"en":"have an arm in plaster","hu":"begipszelt karja van","topic":"Accidents"},
+  {"id":42,"en":"put a plaster on","hu":"ragtapaszt tesz rá","topic":"Accidents"},
+  {"id":43,"en":"put a dressing on","hu":"kötést tesz rá","topic":"Accidents"},
+  {"id":44,"en":"put a bandage on","hu":"bepólyáz / fásliz","topic":"Accidents"},
+  {"id":45,"en":"disease / sickness / illness","hu":"betegség","topic":"Health problems and diseases"},
+  {"id":46,"en":"ill / sick","hu":"beteg","topic":"Health problems and diseases"},
+  {"id":47,"en":"common cold","hu":"általános megfázás / nátha","topic":"Health problems and diseases"},
+  {"id":48,"en":"flu","hu":"influenza","topic":"Health problems and diseases"},
+  {"id":49,"en":"runny nose","hu":"folyó orr (folyik az orra)","topic":"Health problems and diseases"},
+  {"id":50,"en":"catch a cold","hu":"megfázik","topic":"Health problems and diseases"},
+  {"id":51,"en":"infection","hu":"fertőzés","topic":"Health problems and diseases"},
+  {"id":52,"en":"sore throat","hu":"torokfájás","topic":"Health problems and diseases"},
+  {"id":53,"en":"cough","hu":"köhögni / köhögés","topic":"Health problems and diseases"},
+  {"id":54,"en":"allergy","hu":"allergia","topic":"Health problems and diseases"},
+  {"id":55,"en":"allergic to","hu":"allergiás valamire","topic":"Health problems and diseases"},
+  {"id":56,"en":"suffer from","hu":"szenved valamitől","topic":"Health problems and diseases"},
+  {"id":57,"en":"backache","hu":"hátfájás","topic":"Health problems and diseases"},
+  {"id":58,"en":"earache","hu":"fülfájás","topic":"Health problems and diseases"},
+  {"id":59,"en":"toothache","hu":"fogfájás","topic":"Health problems and diseases"},
+  {"id":60,"en":"stomach ache","hu":"gyomorfájás","topic":"Health problems and diseases"},
+  {"id":61,"en":"cancer","hu":"rák (betegség)","topic":"Health problems and diseases"},
+  {"id":62,"en":"heart disease","hu":"szívbetegség","topic":"Health problems and diseases"},
+  {"id":63,"en":"heart attack","hu":"szívroham","topic":"Health problems and diseases"},
+  {"id":64,"en":"headache","hu":"fejfájás","topic":"Health problems and diseases"},
+  {"id":65,"en":"high blood pressure","hu":"magas vérnyomás","topic":"Health problems and diseases"},
+  {"id":66,"en":"low blood pressure","hu":"alacsony vérnyomás","topic":"Health problems and diseases"},
+  {"id":67,"en":"die of / from sth","hu":"meghal valamilyen betegségben","topic":"Health problems and diseases"},
+  {"id":68,"en":"fatal disease","hu":"halálos betegség","topic":"Health problems and diseases"},
+  {"id":69,"en":"get food poisoning","hu":"ételmérgezést kap","topic":"Health problems and diseases"},
+  {"id":70,"en":"sneeze","hu":"tüsszent / tüsszentés","topic":"Health problems and diseases"},
+  {"id":71,"en":"throw up / vomit","hu":"hány / hányni","topic":"Health problems and diseases"},
+  {"id":72,"en":"treat","hu":"kezel (orvosilag)","topic":"Symptoms and treatment"},
+  {"id":73,"en":"treatment","hu":"kezelés / gyógykezelés","topic":"Symptoms and treatment"},
+  {"id":74,"en":"cure (noun)","hu":"gyógymód","topic":"Symptoms and treatment"},
+  {"id":75,"en":"cure (verb)","hu":"gyógyít / kigyógyít","topic":"Symptoms and treatment"},
+  {"id":76,"en":"drops","hu":"cseppek (pl. szem-, orrcsepp)","topic":"Symptoms and treatment"},
+  {"id":77,"en":"first-aid","hu":"elsősegély","topic":"Symptoms and treatment"},
+  {"id":78,"en":"plaster","hu":"ragtapasz","topic":"Symptoms and treatment"},
+  {"id":79,"en":"give sb a shot / an injection","hu":"bead valakinek egy injekciót","topic":"Symptoms and treatment"},
+  {"id":80,"en":"vaccinate","hu":"beolt / oltást ad","topic":"Symptoms and treatment"},
+  {"id":81,"en":"lose weight","hu":"lefogy / súlyt veszít","topic":"Symptoms and treatment"},
+  {"id":82,"en":"painkillers","hu":"fájdalomcsillapítók","topic":"Symptoms and treatment"},
+  {"id":83,"en":"pill","hu":"tabletta / pirula","topic":"Symptoms and treatment"},
+  {"id":84,"en":"prescription","hu":"orvosi recept / felírás","topic":"Symptoms and treatment"},
+  {"id":85,"en":"medicine / medication","hu":"gyógyszer","topic":"Symptoms and treatment"},
+  {"id":86,"en":"vaccination for / against","hu":"oltás valami ellen","topic":"Symptoms and treatment"},
+  {"id":87,"en":"be unconscious","hu":"eszméletlen állapotban van","topic":"Symptoms and treatment"},
+  {"id":88,"en":"blister","hu":"vízhólyag","topic":"Symptoms and treatment"},
+  {"id":89,"en":"faint","hu":"elájul","topic":"Symptoms and treatment"},
+  {"id":90,"en":"feel dizzy","hu":"szédül","topic":"Symptoms and treatment"},
+  {"id":91,"en":"feel well","hu":"jól érzi magát","topic":"Symptoms and treatment"},
+  {"id":92,"en":"feel unwell","hu":"rosszul van / nem érzi jól magát","topic":"Symptoms and treatment"},
+  {"id":93,"en":"have a high temperature","hu":"magas láza van","topic":"Symptoms and treatment"},
+  {"id":94,"en":"have a rash","hu":"kiütése van","topic":"Symptoms and treatment"},
+  {"id":95,"en":"nausea","hu":"hányinger","topic":"Symptoms and treatment"},
+  {"id":96,"en":"nosebleed","hu":"orrvérzés","topic":"Symptoms and treatment"},
+  {"id":97,"en":"panic attack","hu":"pánikroham","topic":"Symptoms and treatment"},
+  {"id":98,"en":"recover from an illness / get over","hu":"felgyógyul egy betegségből / túljut rajta","topic":"Symptoms and treatment"},
+  {"id":99,"en":"side effects","hu":"mellékhatások","topic":"Symptoms and treatment"},
+  {"id":100,"en":"blind","hu":"vak","topic":"Disability"},
+  {"id":101,"en":"blindness","hu":"vakság","topic":"Disability"},
+  {"id":102,"en":"deaf","hu":"süket / siket","topic":"Disability"},
+  {"id":103,"en":"deafness","hu":"süketség / siketség","topic":"Disability"},
+  {"id":104,"en":"wheelchair","hu":"kerekesszék","topic":"Disability"},
+  {"id":105,"en":"disabled people","hu":"fogyatékos emberek / megváltozott munkaképességűek","topic":"Disability"},
+  {"id":106,"en":"disability","hu":"fogyatékosság","topic":"Disability"},
+  {"id":107,"en":"amputation","hu":"amputálás / amputáció","topic":"Disability"},
+  {"id":108,"en":"physical disability","hu":"testi fogyatékosság","topic":"Disability"},
+  {"id":109,"en":"mental disability","hu":"szellemi fogyatékosság","topic":"Disability"},
+  {"id":110,"en":"addict","hu":"szenvedélyfüggő / függő","topic":"Addictions"},
+  {"id":111,"en":"addiction","hu":"függőség","topic":"Addictions"},
+  {"id":112,"en":"be addicted to","hu":"valaminek a rabja / függője","topic":"Addictions"},
+  {"id":113,"en":"become / get addicted to","hu":"rabjává / függőjévé válik valaminek","topic":"Addictions"},
+  {"id":114,"en":"withdrawal symptoms","hu":"elvonási tünetek","topic":"Addictions"},
+  {"id":115,"en":"gambling","hu":"szerencsejáték","topic":"Addictions"},
+  {"id":116,"en":"get into a habit","hu":"rászokik valamire","topic":"Addictions"},
+  {"id":117,"en":"give up a habit","hu":"abbahagy egy szokást","topic":"Addictions"},
+  {"id":118,"en":"dose","hu":"adag / adagol","topic":"Addictions"},
+  {"id":119,"en":"overdose","hu":"túladagolás / túladagol","topic":"Addictions"},
+  {"id":120,"en":"use drugs","hu":"drogozik","topic":"Addictions"},
+  {"id":121,"en":"dentist","hu":"fogorvos","topic":"At the doctor's / In hospital"},
+  {"id":122,"en":"specialist","hu":"szakorvos / specialista","topic":"At the doctor's / In hospital"},
+  {"id":123,"en":"general practitioner (GP)","hu":"háziorvos","topic":"At the doctor's / In hospital"},
+  {"id":124,"en":"family doctor","hu":"családi orvos / háziorvos","topic":"At the doctor's / In hospital"},
+  {"id":125,"en":"nurse","hu":"ápoló / betegápoló / nővér","topic":"At the doctor's / In hospital"},
+  {"id":126,"en":"surgeon","hu":"sebész","topic":"At the doctor's / In hospital"},
+  {"id":127,"en":"paramedic","hu":"mentőtiszt / rohammentős","topic":"At the doctor's / In hospital"},
+  {"id":128,"en":"psychiatrist","hu":"pszichiáter","topic":"At the doctor's / In hospital"},
+  {"id":129,"en":"psychologist","hu":"pszichológus","topic":"At the doctor's / In hospital"},
+  {"id":130,"en":"patient","hu":"beteg / páciens","topic":"At the doctor's / In hospital"},
+  {"id":131,"en":"have a blood test","hu":"vérvételre megy / vérvizsgálata van","topic":"At the doctor's / In hospital"},
+  {"id":132,"en":"sick leave","hu":"betegállomány / táppénz","topic":"At the doctor's / In hospital"},
+  {"id":133,"en":"go to see / visit a doctor","hu":"elmegy az orvoshoz / felkeresi az orvost","topic":"At the doctor's / In hospital"},
+  {"id":134,"en":"go for / have a check-up","hu":"kivizsgálásra / rutinellenőrzésre megy","topic":"At the doctor's / In hospital"},
+  {"id":135,"en":"examine","hu":"megvizsgál","topic":"At the doctor's / In hospital"},
+  {"id":136,"en":"be referred to hospital","hu":"beutalják a kórházba","topic":"At the doctor's / In hospital"},
+  {"id":137,"en":"call an ambulance","hu":"mentőt hív","topic":"At the doctor's / In hospital"},
+  {"id":138,"en":"surgery","hu":"sebészet / orvosi rendelő","topic":"At the doctor's / In hospital"},
+  {"id":139,"en":"ward","hu":"kórterem","topic":"At the doctor's / In hospital"},
+  {"id":140,"en":"waiting room","hu":"váróterem","topic":"At the doctor's / In hospital"},
+  {"id":141,"en":"emergency room","hu":"sürgősségi osztály","topic":"At the doctor's / In hospital"},
+  {"id":142,"en":"health insurance","hu":"egészségbiztosítás","topic":"At the doctor's / In hospital"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fsToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u11-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function toggleFullscreen(){
+  document.body.classList.toggle('fs-mode');
+  if(document.body.classList.contains('fs-mode')){
+    els.fs.textContent='🗗 Normál nézet';
+  }else{
+    els.fs.textContent='⛶ Egész képernyő';
+  }
+}
+els.fs.onclick=toggleFullscreen;
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered();
+  if(list.length && idx>=list.length)idx=0;
+  const c=list[idx]||list[0];
+  
+  els.f.innerHTML='';
+  ["Mind","Parts of the body","Accidents","Health problems and diseases","Symptoms and treatment","Disability","Addictions","At the doctor's / In hospital"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+  if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+};
+render();
+</script></body></html>

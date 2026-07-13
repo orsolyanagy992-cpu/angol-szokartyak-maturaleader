@@ -1,0 +1,327 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló memóriakártyák - Unit 2</title><style>
+:root{--ink:#17202a;--muted:#637083;--line:#d8dee8;--paper:#ffffff;--panel:#fff;--blue:#15803d;--green:#16a34a;--red:#b42318;--shadow:0 18px 50px rgba(23,32,42,.14)}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background-color:#edf7ed;transition:background .2s}
+main{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:26px 0 34px;transition:max-width .2s}
+header{display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:end;margin-bottom:18px}
+h1{margin:0 0 5px;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:0}
+.sub{margin:0;color:var(--muted);font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(92px,1fr));gap:8px;min-width:310px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat span{color:var(--muted);font-size:12px}
+.fullscreen-btn{min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px}
+.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin:18px 0;align-items:center}
+input,select,button{font:inherit}
+input,select{width:100%;min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:0 12px}
+button{min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:0 14px;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
+button:hover{transform:translateY(-1px);border-color:#aeb9c8}
+button:active{transform:translateY(0)}
+button.primary{background:var(--blue);border-color:var(--blue);color:white}
+button.good{background:#eafaf1;border-color:#afe0bd;color:var(--green)}
+button.hard{background:#fff1ed;border-color:#fac7bd;color:var(--red)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr)315px;gap:18px;align-items:start}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;box-shadow:var(--shadow)}
+.progress{height:10px;background:#e7ebf2;border-radius:99px;overflow:hidden;margin-bottom:16px}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:330px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(rgba(21,128,61,0.08) 1px,transparent 1px),var(--paper);background-size:100% 32px;padding:28px;text-align:center;cursor:pointer;user-select:none;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.card small{position:absolute;top:14px;left:16px;color:var(--muted);font-weight:700;text-transform:uppercase;font-size:12px}
+.term{max-width:100%;font-size:clamp(30px,5vw,56px);line-height:1.05;overflow-wrap:anywhere;background:var(--paper);padding:4px 8px}
+.answer{margin-top:12px;color:var(--muted);font-size:15px;background:var(--paper);padding:2px 6px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.quiz{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.quiz button{min-height:58px;white-space:normal;line-height:1.2}
+aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.box h2{margin:0 0 10px;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:34px;padding:0 10px;border-radius:99px;background:#f3f5f9}
+.chip.active{background:#eafaf1;border-color:#afe0bd;color:#15803d}
+.list{max-height:310px;overflow:auto;display:grid;gap:7px;padding-right:4px}
+.row{display:grid;grid-template-columns:1fr;gap:2px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fbfcff;cursor:pointer;text-align:left}
+.row b,.row span{overflow-wrap:anywhere}
+.row span{color:var(--muted);font-size:13px}
+.empty{display:none;padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px;background:white}
+
+body.fullscreen-mode main{width:min(800px,calc(100% - 32px));padding-top:40px}
+body.fullscreen-mode header, body.fullscreen-mode aside{display:none !important}
+body.fullscreen-mode .layout{grid-template-columns:1fr}
+
+@media(max-width:850px){
+    header,.layout,.toolbar{grid-template-columns:1fr}
+    .stats{min-width:0}
+    .actions{grid-template-columns:repeat(2,1fr)}
+    .actions button.primary{grid-column:span 2}
+    .quiz{grid-template-columns:1fr}
+    .card{min-height:280px}
+    header{grid-template-columns:1fr auto}
+    .fullscreen-btn{grid-row:1;justify-self:end}
+}
+</style></head><body><main><header><div><h1>Unit 2</h1><p class="sub">Interaktív gyakorló a szójegyzék anyagából.</p></div><section class="stats"><div class="stat"><b id="seenCount">0</b><span>átvett</span></div><div class="stat"><b id="knownCount">0</b><span>tudom</span></div><div class="stat"><b id="hardCount">0</b><span>gyakorlandó</span></div></section><button id="fullscreenToggle" class="fullscreen-btn" title="Egész képernyős mód">⤢</button></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés angolul vagy magyarul"><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> magyar</option><option value="hu-en">Magyar -> angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="progress"></span></div><div id="empty" class="empty">Nincs találat erre a keresésre.</div><article id="card" class="card" tabindex="0"><small id="cardMeta">1 / 1</small><div><div id="term" class="term"></div><div id="answer" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Következő</button><button id="hard" class="hard">Gyakorolni</button><button id="known" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Válogatás</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szókártyák</h2><div class="list" id="wordList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"block of flats","hu":"háztömb","topic":"Kinds of houses / buildings"},
+  {"id":1,"en":"bungalow","hu":"egyszintes ház","topic":"Kinds of houses / buildings"},
+  {"id":2,"en":"cottage","hu":"vidéki ház, vendégház","topic":"Kinds of houses / buildings"},
+  {"id":3,"en":"detached house","hu":"családi ház","topic":"Kinds of houses / buildings"},
+  {"id":4,"en":"farmhouse","hu":"parasztház, tanya","topic":"Kinds of houses / buildings"},
+  {"id":5,"en":"semi-detached house","hu":"ikerház","topic":"Kinds of houses / buildings"},
+  {"id":6,"en":"flat / apartment","hu":"lakás / apartman","topic":"Kinds of houses / buildings"},
+  {"id":7,"en":"one room flat / bedsit / bedsitter","hu":"garzonlakás","topic":"Kinds of houses / buildings"},
+  {"id":8,"en":"three-room flat","hu":"háromszobás lakás","topic":"Kinds of houses / buildings"},
+  {"id":9,"en":"multi-storey house","hu":"emeletes ház","topic":"Kinds of houses / buildings"},
+  {"id":10,"en":"skyscraper","hu":"felhőkarcoló","topic":"Kinds of houses / buildings"},
+  {"id":11,"en":"summer house","hu":"nyaraló, kertilak","topic":"Kinds of houses / buildings"},
+  {"id":12,"en":"ten-storey block","hu":"tíz emeletes ház","topic":"Kinds of houses / buildings"},
+  {"id":13,"en":"terraced house","hu":"sorház","topic":"Kinds of houses / buildings"},
+  {"id":14,"en":"tower block","hu":"toronyház","topic":"Kinds of houses / buildings"},
+  {"id":15,"en":"mansion","hu":"villa, luxus ház","topic":"Kinds of houses / buildings"},
+  {"id":16,"en":"(un)furnished","hu":"bútorozott / bútorozatlan","topic":"Description in general"},
+  {"id":17,"en":"affordable","hu":"megfizethető","topic":"Description in general"},
+  {"id":18,"en":"cluttered","hu":"zsúfolt","topic":"Description in general"},
+  {"id":19,"en":"convenient / comfortable","hu":"megfelelő / kényelmes","topic":"Description in general"},
+  {"id":20,"en":"cosy","hu":"lakályos","topic":"Description in general"},
+  {"id":21,"en":"damp","hu":"nyirkos","topic":"Description in general"},
+  {"id":22,"en":"functional","hu":"rendeltetésszerű","topic":"Description in general"},
+  {"id":23,"en":"in good / bad condition","hu":"jó / rossz állapotú","topic":"Description in general"},
+  {"id":24,"en":"luxurious","hu":"fényűző","topic":"Description in general"},
+  {"id":25,"en":"messy","hu":"rendetlen","topic":"Description in general"},
+  {"id":26,"en":"nicely-decorated","hu":"szépen berendezett","topic":"Description in general"},
+  {"id":27,"en":"open-plan","hu":"egyterű","topic":"Description in general"},
+  {"id":28,"en":"peaceful","hu":"békés, nyugodt","topic":"Description in general"},
+  {"id":29,"en":"picturesque","hu":"festői szépségű","topic":"Description in general"},
+  {"id":30,"en":"run-down","hu":"lepusztult","topic":"Description in general"},
+  {"id":31,"en":"spacious / large","hu":"tágas / nagy","topic":"Description in general"},
+  {"id":32,"en":"tiny","hu":"pici, apró","topic":"Description in general"},
+  {"id":33,"en":"welcoming","hu":"üdvözlő, barátságos","topic":"Description in general"},
+  {"id":34,"en":"well-equipped","hu":"jól felszerelt","topic":"Description in general"},
+  {"id":35,"en":"well-kept / well-maintained","hu":"gondozott / jól karbantartott","topic":"Description in general"},
+  {"id":36,"en":"with a view of the lake","hu":"tóra néző","topic":"Description in general"},
+  {"id":37,"en":"residential area","hu":"lakónegyed","topic":"Description in general"},
+  {"id":38,"en":"suburbs","hu":"kertvárosi környék","topic":"Description in general"},
+  {"id":39,"en":"city centre","hu":"városközpont","topic":"Description in general"},
+  {"id":40,"en":"industrial","hu":"ipari","topic":"Description in general"},
+  {"id":41,"en":"urban","hu":"városi","topic":"Description in general"},
+  {"id":42,"en":"on the outskirts","hu":"a peremvárosban","topic":"Description in general"},
+  {"id":43,"en":"district","hu":"kerület, körzet","topic":"Description in general"},
+  {"id":44,"en":"housing estate","hu":"lakótelep","topic":"Description in general"},
+  {"id":45,"en":"capital city","hu":"főváros","topic":"Description in general"},
+  {"id":46,"en":"village","hu":"falu","topic":"Description in general"},
+  {"id":47,"en":"rural","hu":"vidéki","topic":"Description in general"},
+  {"id":48,"en":"attic","hu":"padlás; padlásszoba","topic":"Parts of the house"},
+  {"id":49,"en":"balcony","hu":"erkély","topic":"Parts of the house"},
+  {"id":50,"en":"basement","hu":"alagsor","topic":"Parts of the house"},
+  {"id":51,"en":"bathroom","hu":"fürdőszoba","topic":"Parts of the house"},
+  {"id":52,"en":"bedroom","hu":"hálószoba","topic":"Parts of the house"},
+  {"id":53,"en":"ceiling","hu":"mennyezet","topic":"Parts of the house"},
+  {"id":54,"en":"child's / children's room","hu":"gyerekszoba","topic":"Parts of the house"},
+  {"id":55,"en":"corridor","hu":"folyosó","topic":"Parts of the house"},
+  {"id":56,"en":"dining room","hu":"ebédlő","topic":"Parts of the house"},
+  {"id":57,"en":"drive","hu":"bejáró, kocsifeljáró","topic":"Parts of the house"},
+  {"id":58,"en":"exterior / interior","hu":"külső / belső","topic":"Parts of the house"},
+  {"id":59,"en":"downstairs","hu":"alsó szint (kétszintes házban)","topic":"Parts of the house"},
+  {"id":60,"en":"fence","hu":"kerítés","topic":"Parts of the house"},
+  {"id":61,"en":"floor","hu":"emelet, padló","topic":"Parts of the house"},
+  {"id":62,"en":"garage","hu":"garázs","topic":"Parts of the house"},
+  {"id":63,"en":"garden","hu":"kert","topic":"Parts of the house"},
+  {"id":64,"en":"ground floor","hu":"földszint","topic":"Parts of the house"},
+  {"id":65,"en":"guest / spare room","hu":"vendégszoba","topic":"Parts of the house"},
+  {"id":66,"en":"hall","hu":"előszoba","topic":"Parts of the house"},
+  {"id":67,"en":"lawn","hu":"pázsit","topic":"Parts of the house"},
+  {"id":68,"en":"loft","hu":"galéria, loft","topic":"Parts of the house"},
+  {"id":69,"en":"porch","hu":"tornác","topic":"Parts of the house"},
+  {"id":70,"en":"roof","hu":"tető","topic":"Parts of the house"},
+  {"id":71,"en":"sitting / living room","hu":"nappanli / nappali","topic":"Parts of the house"},
+  {"id":72,"en":"stairs","hu":"lépcső","topic":"Parts of the house"},
+  {"id":73,"en":"upstairs","hu":"felső szint (kétszintes házban)","topic":"Parts of the house"},
+  {"id":74,"en":"utility room","hu":"mosókonyha","topic":"Parts of the house"},
+  {"id":75,"en":"study","hu":"dolgozószoba","topic":"Parts of the house"},
+  {"id":76,"en":"blind / shutter","hu":"roló, reluxa / redőny, spaletta","topic":"Equipment and decoration"},
+  {"id":77,"en":"carpet, rug","hu":"szőnyeg","topic":"Equipment and decoration"},
+  {"id":78,"en":"central heating","hu":"központi fűtés","topic":"Equipment and decoration"},
+  {"id":79,"en":"curtain","hu":"függöny","topic":"Equipment and decoration"},
+  {"id":80,"en":"wallpaper","hu":"tapéta","topic":"Equipment and decoration"},
+  {"id":81,"en":"bath(tub)","hu":"fürdőkád","topic":"Equipment and decoration"},
+  {"id":82,"en":"tap","hu":"csap","topic":"Equipment and decoration"},
+  {"id":83,"en":"washbasin","hu":"mosdákagyló","topic":"Equipment and decoration"},
+  {"id":84,"en":"bedside table","hu":"éjjeliszekrény","topic":"Equipment and decoration"},
+  {"id":85,"en":"single bed","hu":"egyszemélyes ágy","topic":"Equipment and decoration"},
+  {"id":86,"en":"double bed","hu":"kétszemélyes ágy","topic":"Equipment and decoration"},
+  {"id":87,"en":"wardrobe","hu":"szekrény","topic":"Equipment and decoration"},
+  {"id":88,"en":"cooker","hu":"tűzhely","topic":"Equipment and decoration"},
+  {"id":89,"en":"(wall) cupboard","hu":"konyhaszekrény","topic":"Equipment and decoration"},
+  {"id":90,"en":"dishwasher","hu":"mosogatógép","topic":"Equipment and decoration"},
+  {"id":91,"en":"freezer","hu":"mélyhűtő, fagyasztó","topic":"Equipment and decoration"},
+  {"id":92,"en":"sink","hu":"mosogató","topic":"Equipment and decoration"},
+  {"id":93,"en":"armchair","hu":"fotel","topic":"Equipment and decoration"},
+  {"id":94,"en":"chest of drawers","hu":"komód","topic":"Equipment and decoration"},
+  {"id":95,"en":"coffee table","hu":"dohányzóasztal","topic":"Equipment and decoration"},
+  {"id":96,"en":"cushion","hu":"párna, díszpárna","topic":"Equipment and decoration"},
+  {"id":97,"en":"fireplace","hu":"kandalló","topic":"Equipment and decoration"},
+  {"id":98,"en":"furniture","hu":"bútor, bútorzat","topic":"Equipment and decoration"},
+  {"id":99,"en":"change a light bulb","hu":"kicserél egy villanykörtét","topic":"Housework"},
+  {"id":100,"en":"clean / tidy up","hu":"kitakarít","topic":"Housework"},
+  {"id":101,"en":"decorate a room","hu":"kifest / kidekorál egy szobát","topic":"Housework"},
+  {"id":102,"en":"DIY (Do It Yourself)","hu":"barkácsolni, csináld magad","topic":"Housework"},
+  {"id":103,"en":"do (the) housework","hu":"házimunkát végez","topic":"Housework"},
+  {"id":104,"en":"dust","hu":"leporol","topic":"Housework"},
+  {"id":105,"en":"install (an appliance)","hu":"felszerel (egy berendezést)","topic":"Housework"},
+  {"id":106,"en":"mow the lawn","hu":"lenyírja a füvet","topic":"Housework"},
+  {"id":107,"en":"renovate / do up","hu":"helyreállít / rendbe hoz","topic":"Housework"},
+  {"id":108,"en":"do the ironing","hu":"vasalni","topic":"Housework"},
+  {"id":109,"en":"repair / fix","hu":"megjavít","topic":"Housework"},
+  {"id":110,"en":"sweep","hu":"felsöpör","topic":"Housework"},
+  {"id":111,"en":"vacuum","hu":"kiporszívózza","topic":"Housework"},
+  {"id":112,"en":"mop the floor","hu":"felmossa a padlót","topic":"Housework"},
+  {"id":113,"en":"do the washing-up / do the dishes","hu":"mosogatni","topic":"Housework"},
+  {"id":114,"en":"take the rubbish out","hu":"kiviszi a szemetet","topic":"Housework"},
+  {"id":115,"en":"house renovation","hu":"ház felújítás","topic":"Property"},
+  {"id":116,"en":"electricity / telephone bill","hu":"villany- / telefonszámla","topic":"Property"},
+  {"id":117,"en":"cost of utilities","hu":"közüzemi költségek","topic":"Property"},
+  {"id":118,"en":"estate agent / agency","hu":"ingatlanügynök / ingatlanügynökség","topic":"Property"},
+  {"id":119,"en":"flatmate / housemate","hu":"lakótárs / szobatárs","topic":"Property"},
+  {"id":120,"en":"for sale","hu":"eladó","topic":"Property"},
+  {"id":121,"en":"homeowner","hu":"háztulajdonos","topic":"Property"},
+  {"id":122,"en":"inhabitant / resident / householder","hu":"lakos / lakó / háztulajdonos","topic":"Property"},
+  {"id":123,"en":"landlord / landlady","hu":"főbérlő","topic":"Property"},
+  {"id":124,"en":"live on the first / second floor","hu":"az első / második emeleten lakik","topic":"Property"},
+  {"id":125,"en":"move in / out","hu":"beköltözik / kiköltözik","topic":"Property"},
+  {"id":126,"en":"increase the rent","hu":"emeli a bérleti díjat","topic":"Property"},
+  {"id":127,"en":"lower the rent","hu":"csökkenti a bérleti díjat","topic":"Property"},
+  {"id":128,"en":"pay (high / low) rent","hu":"(magas / alacsony) bérleti díjat fizet","topic":"Property"},
+  {"id":129,"en":"pay the bills","hu":"kiegyenlíti a számlát","topic":"Property"},
+  {"id":130,"en":"property","hu":"tulajdon, ingatlan","topic":"Property"},
+  {"id":131,"en":"real estate","hu":"ingatlan","topic":"Property"},
+  {"id":132,"en":"rent a flat from sb","hu":"lakást bérel vkitől","topic":"Property"},
+  {"id":133,"en":"share a room","hu":"megosztja a szobát vkivel","topic":"Property"},
+  {"id":134,"en":"tenant","hu":"főbérlő, lakó","topic":"Property"},
+  {"id":135,"en":"rent a flat to sb","hu":"lakást bérbe ad vkinek","topic":"Property"}
+];
+
+const $=s=>document.querySelector(s);
+const els={
+  search:$('#search'),mode:$('#mode'),direction:$('#direction'),filters:$('#filters'),
+  wordList:$('#wordList'),card:$('#card'),cardMeta:$('#cardMeta'),term:$('#term'),
+  answer:$('#answer'),quiz:$('#quiz'),empty:$('#empty'),progress:$('#progress'),
+  seenCount:$('#seenCount'),knownCount:$('#knownCount'),hardCount:$('#hardCount'),
+  prev:$('#prev'),next:$('#next'),flip:$('#flip'),known:$('#known'),hard:$('#hard'),
+  fsToggle:$('#fullscreenToggle')
+};
+
+const storeKey='szokartyak-unit2-allapot';
+let state=JSON.parse(localStorage.getItem(storeKey)||'{}'),activeTopic='Mind',index=0,flipped=false;
+
+function save(){localStorage.setItem(storeKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+function topics(){return ['Mind','Kinds of houses / buildings','Description in general','Parts of the house','Equipment and decoration','Housework','Property']}
+
+function filteredCards(){
+  const q=els.search.value.trim().toLowerCase();
+  return cards.filter(c=>(activeTopic==='Mind'||c.topic===activeTopic)&&(!q||`${c.en} ${c.hu} ${c.topic}`.toLowerCase().includes(q))).map(c=>c);
+}
+
+function frontBack(c){return els.direction.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+function currentCard(){const l=filteredCards();if(index>=l.length)index=Math.max(0,l.length-1);return l[index]}
+
+function mark(kind){
+  const c=currentCard();if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[kind]:true};
+  if(kind==='known')state[c.id].hard=false;
+  if(kind==='hard')state[c.id].known=false;
+  save();nextCard();render();
+}
+
+function renderStats(){
+  const v=Object.values(state);
+  els.seenCount.textContent=v.filter(x=>x.seen).length;
+  els.knownCount.textContent=v.filter(x=>x.known).length;
+  els.hardCount.textContent=v.filter(x=>x.hard).length;
+}
+
+function renderFilters(){
+  els.filters.innerHTML='';
+  topics().forEach(t=>{
+    const b=document.createElement('button');
+    b.className='chip'+(t===activeTopic?' active':'');
+    b.textContent=t==='Mind'?`${t} (${cards.length})`:t;
+    b.onclick=()=>{activeTopic=t;index=0;flipped=false;render()};
+    els.filters.append(b);
+  });
+}
+
+function renderList(list){
+  els.wordList.innerHTML='';
+  list.forEach((c,pos)=>{
+    const r=document.createElement('button');
+    r.className='row';
+    r.innerHTML='<b>'+c.en+'</b><span>'+c.hu+'</span>';
+    r.onclick=()=>{index=pos;flipped=false;render()};
+    els.wordList.append(r);
+  });
+}
+
+function renderCard(list,c){
+  const ok=!!c;
+  els.empty.style.display=ok?'none':'block';
+  els.card.style.display=ok?'grid':'none';
+  els.quiz.style.display=ok&&els.mode.value==='quiz'?'grid':'none';
+  els.card.style.cursor=els.mode.value==='cards'?'pointer':'default';
+  if(!c)return;
+  const [front,back,label]=frontBack(c);
+  els.cardMeta.textContent=`${index+1} / ${list.length} - ${label} - ${c.topic}`;
+  els.term.textContent=flipped?back:front;
+  els.answer.textContent=flipped?front:'Kattints a fordításhoz';
+  els.progress.style.width=`${((index+1)/list.length)*100}%`;
+  state[c.id]={...(state[c.id]||{}),seen:true};
+  save();
+}
+
+function renderQuiz(c){
+  els.quiz.innerHTML='';if(!c||els.mode.value!=='quiz')return;
+  const [,correct]=frontBack(c);
+  const pool=cards.filter(x=>x.id!==c.id);
+  const choices=[correct,...shuffle(pool).slice(0,3).map(x=>els.direction.value==='en-hu'?x.hu:x.en)];
+  shuffle(choices).forEach(choice=>{
+    const b=document.createElement('button');
+    b.textContent=choice;
+    b.onclick=()=>{flipped=true;mark(choice===correct?'known':'hard')};
+    els.quiz.append(b);
+  });
+}
+
+function render(){
+  const list=filteredCards(),card=currentCard();
+  renderFilters();renderList(list);renderCard(list,card);renderQuiz(card);renderStats();
+}
+
+function nextCard(){const len=filteredCards().length;if(!len)return;index=(index+1)%len;flipped=false}
+
+els.card.onclick=()=>{if(els.mode.value==='cards'){flipped=!flipped;render()}};
+els.card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipped=!flipped;render()}};
+els.flip.onclick=()=>{flipped=!flipped;render()};
+els.prev.onclick=()=>{const len=filteredCards().length;if(!len)return;index=(index-1+len)%len;flipped=false;render()};
+els.next.onclick=()=>{nextCard();render()};
+els.known.onclick=()=>mark('known');
+els.hard.onclick=()=>mark('hard');
+els.search.oninput=()=>{index=0;flipped=false;render()};
+els.mode.onchange=()=>{flipped=false;render()};
+els.direction.onchange=()=>{flipped=false;render()};
+
+els.fsToggle.onclick=()=>{
+  document.body.classList.toggle('fullscreen-mode');
+  if(document.body.classList.contains('fullscreen-mode')){
+    els.fsToggle.textContent = '⤝⤞';
+    els.fsToggle.title = 'Kilépés az egész képernyős módból';
+  } else {
+    els.fsToggle.textContent = '⤢';
+    els.fsToggle.title = 'Egész képernyős mód';
+  }
+};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){nextCard();render()}
+  if(e.key==='ArrowLeft')els.prev.click();
+  if(e.key===' '){e.preventDefault();els.flip.click()}
+};
+
+render();
+</script></body></html>

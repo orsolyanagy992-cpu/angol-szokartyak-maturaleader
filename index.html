@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matura Leader Szókártyák</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #b4c6b4; 
+            color: #2f3e2f;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 42px;
+            margin: 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 24px;
+            margin-top: 5px;
+            color: #4a5d4a;
+            font-weight: 400;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .unit-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .unit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-image {
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+            background-color: #d1dbd1;
+        }
+
+        .card-content {
+            padding: 16px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            color: #1e291e;
+        }
+
+        .card-topic {
+            font-size: 13px;
+            color: #607360;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Matura Leader</h1>
+        <div class="subtitle">— Szókártyák —</div>
+    </header>
+
+    <div class="grid-container">
+
+        <a href="unit1.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1511556532299-8f662fc26c06?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 1</div>
+                <div class="card-topic">Human Being</div>
+            </div>
+        </a>
+
+        <a href="szotanulo_unit2.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1513694203232-719a280e022f?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 2</div>
+                <div class="card-topic">House & Home</div>
+            </div>
+        </a>
+
+        <a href="szotanulo_unit3_fullscreen.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1542435503-956c469947f6?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 3</div>
+                <div class="card-topic">School & Education</div>
+            </div>
+        </a>
+
+        <a href="szotanulo_unit4_fullscreen.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 4</div>
+                <div class="card-topic">Work & Employment</div>
+            </div>
+        </a>
+
+        <a href="szotanulo_unit5_fullscreen.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 5</div>
+                <div class="card-topic">Family & Social Life</div>
+            </div>
+        </a>
+
+        <a href="unit6.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 6</div>
+                <div class="card-topic">Food & Nutrition</div>
+            </div>
+        </a>
+
+        <a href="unit7.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1489257712451-3a6f72f01566?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 7</div>
+                <div class="card-topic">Shopping & Services</div>
+            </div>
+        </a>
+
+        <a href="unit8.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 8</div>
+                <div class="card-topic">Travelling & Tourism</div>
+            </div>
+        </a>
+
+        <a href="unit9.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 9</div>
+                <div class="card-topic">Art & Culture</div>
+            </div>
+        </a>
+
+        <a href="unit10.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 10</div>
+                <div class="card-topic">Sports</div>
+            </div>
+        </a>
+
+        <a href="unit11.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1546422126-27cf85d4304e?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 11</div>
+                <div class="card-topic">Health & Lifestyle</div>
+            </div>
+        </a>
+
+        <a href="unit13.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 13</div>
+                <div class="card-topic">Nature</div>
+            </div>
+        </a>
+
+        <a href="unit14.html" class="unit-card">
+            <div class="card-image" style="background-image: url('https://images.unsplash.com/photo-1453847668862-487637052f8a?w=400')"></div>
+            <div class="card-content">
+                <div class="card-title">Unit 14</div>
+                <div class="card-topic">Crime & Law</div>
+            </div>
+        </a>
+
+    </div>
+
+</body>
+</html>

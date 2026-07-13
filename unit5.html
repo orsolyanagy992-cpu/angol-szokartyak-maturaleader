@@ -1,0 +1,252 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 5</title><style>
+:root{--ink:#2d1724;--muted:#836375;--line:#e8d8e2;--panel:#fff;--pink:#db2777;--green:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#fdf2f8;padding:16px}
+main{width:min(1100px,100%);margin:0 auto}header{display:flex;flex-wrap:wrap;justify-content:between;align-items:center;gap:12px;margin-bottom:16px}
+h1{margin:0;font-size:28px}.stats{display:flex;gap:8px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#fdf2f8}button.primary{background:var(--pink);color:#fff;border-color:var(--pink)}
+button.good{background:#eafaf1;color:var(--green);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(219,39,119,0.05)}
+.progress{height:8px;background:#e7ebf2;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--pink);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(219,39,119,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#fdf2f8;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:#fbcfe8;color:#db2777;border-color:#f472b6}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+body.fullscreen-mode{padding:0}body.fullscreen-mode main{width:min(800px,calc(100% - 32px));padding-top:40px}body.fullscreen-mode header,body.fullscreen-mode aside{display:none!important}body.fullscreen-mode .layout{grid-template-columns:1fr}.fullscreen-btn{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;font-size:20px;padding:0 12px}</style></head><body><main><header><h1>Unit 5 - Family and social life</h1><section class="stats"><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section><button id="fullscreenToggle" class="fullscreen-btn">⤢</button></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"babyhood","hu":"csecsemőkor","topic":"Periods of time in people's lives"},
+  {"id":1,"en":"infancy","hu":"csecsemőkor","topic":"Periods of time in people's lives"},
+  {"id":2,"en":"toddler","hu":"totyogó kisgyerek","topic":"Periods of time in people's lives"},
+  {"id":3,"en":"childhood","hu":"gyermekkor","topic":"Periods of time in people's lives"},
+  {"id":4,"en":"adolescence","hu":"serdülőkor, fiatalkor","topic":"Periods of time in people's lives"},
+  {"id":5,"en":"be in one's teens","hu":"tizenéves","topic":"Periods of time in people's lives"},
+  {"id":6,"en":"youth","hu":"fiatalság","topic":"Periods of time in people's lives"},
+  {"id":7,"en":"adulthood","hu":"felnőttkor","topic":"Periods of time in people's lives"},
+  {"id":8,"en":"be middle-aged","hu":"középkorú","topic":"Periods of time in people's lives"},
+  {"id":9,"en":"retirement","hu":"nyugdíjba vonulás","topic":"Periods of time in people's lives"},
+  {"id":10,"en":"old age","hu":"öregkor","topic":"Periods of time in people's lives"},
+  {"id":11,"en":"pension/ be retired","hu":"nyugdíj/nyugdíjas","topic":"Periods of time in people's lives"},
+  {"id":12,"en":"immediate family","hu":"szűk család","topic":"Family members"},
+  {"id":13,"en":"family tree","hu":"családfa","topic":"Family members"},
+  {"id":14,"en":"siblings","hu":"testvérek","topic":"Family members"},
+  {"id":15,"en":"only child","hu":"egyedüli gyerek, egyke","topic":"Family members"},
+  {"id":16,"en":"(identical) twins","hu":"(egy petéjű) ikrek","topic":"Family members"},
+  {"id":17,"en":"offspring","hu":"utód","topic":"Family members"},
+  {"id":18,"en":"half-sister / half-brother","hu":"féltestvér (lány / fiú)","topic":"Family members"},
+  {"id":19,"en":"nephew/niece","hu":"unokaöcs/unokahúg","topic":"Family members"},
+  {"id":20,"en":"godparents","hu":"keresztszülők","topic":"Family members"},
+  {"id":21,"en":"great-grandparents","hu":"dédnagyszülők","topic":"Family members"},
+  {"id":22,"en":"extended family","hu":"kiterjedt család","topic":"Family members"},
+  {"id":23,"en":"distant relatives","hu":"távoli rokonok","topic":"Family members"},
+  {"id":24,"en":"in-laws","hu":"a házastársam / gyermekeim hozzátartozói","topic":"Family members"},
+  {"id":25,"en":"daughter-in-law","hu":"meny","topic":"Family members"},
+  {"id":26,"en":"son-in-law","hu":"vej","topic":"Family members"},
+  {"id":27,"en":"mother-in-law","hu":"anyós","topic":"Family members"},
+  {"id":28,"en":"father-in-law","hu":"após","topic":"Family members"},
+  {"id":29,"en":"sister-in-law","hu":"sógornő","topic":"Family members"},
+  {"id":30,"en":"brother-in-law","hu":"sógor","topic":"Family members"},
+  {"id":31,"en":"stepbrother / stepsister","hu":"mostohatestvér","topic":"Family members"},
+  {"id":32,"en":"stepdaughter / stepson","hu":"mostoha gyermek","topic":"Family members"},
+  {"id":33,"en":"stepmother","hu":"mostohaanya","topic":"Family members"},
+  {"id":34,"en":"stepfather","hu":"mostohaapa","topic":"Family members"},
+  {"id":35,"en":"adopted child","hu":"örökbefogadott gyermek","topic":"Family members"},
+  {"id":36,"en":"ancestor","hu":"őse, felmenője","topic":"Family life"},
+  {"id":37,"en":"descendant","hu":"leszármazottja vkinek","topic":"Family life"},
+  {"id":38,"en":"be pregnant, expect a baby","hu":"állapotos, babát vár","topic":"Family life"},
+  {"id":39,"en":"start a family","hu":"családot alapítani","topic":"Family life"},
+  {"id":40,"en":"neglected child","hu":"elhanyagolt gyermek","topic":"Family life"},
+  {"id":41,"en":"well-brought up","hu":"jölnevelt","topic":"Family life"},
+  {"id":42,"en":"spoilt child","hu":"elkényeztetett gyermek","topic":"Family life"},
+  {"id":43,"en":"orphanage","hu":"árvaház","topic":"Family life"},
+  {"id":44,"en":"foster family","hu":"nevelő család","topic":"Family life"},
+  {"id":45,"en":"single-parent family","hu":"csonka család","topic":"Family life"},
+  {"id":46,"en":"loving family","hu":"szerető család","topic":"Family life"},
+  {"id":47,"en":"broken family","hu":"felbomlott család","topic":"Family life"},
+  {"id":48,"en":"resemble sb, take after sb","hu":"hasonlít valakire","topic":"Family life"},
+  {"id":49,"en":"bring up / raise (a child)","hu":"felnevel egy gyermeket","topic":"Family life"},
+  {"id":50,"en":"couple","hu":"pár","topic":"Family life"},
+  {"id":51,"en":"spouse","hu":"házastárs","topic":"Family life"},
+  {"id":52,"en":"be separated","hu":"külön él","topic":"Family life"},
+  {"id":53,"en":"ex-wife / ex-husband","hu":"volt feleség / férj","topic":"Family life"},
+  {"id":54,"en":"get divorced","hu":"elválik","topic":"Family life"},
+  {"id":55,"en":"late husband / wife","hu":"néhai férj / feleség","topic":"Family life"},
+  {"id":56,"en":"head / breadwinner of the family","hu":"családfő / a család kenyérkeresője","topic":"Family life"},
+  {"id":57,"en":"We are a family of four.","hu":"Négytagú a családunk.","topic":"Family life"},
+  {"id":58,"en":"settle down","hu":"megállapodik","topic":"Family life"},
+  {"id":59,"en":"acquaintance","hu":"ismerős","topic":"Relationships"},
+  {"id":60,"en":"be fond of","hu":"szeret valakit / ragaszkodik","topic":"Relationships"},
+  {"id":61,"en":"have a crush on sb","hu":"belezúgott valakibe","topic":"Relationships"},
+  {"id":62,"en":"get on well with sb, get along","hu":"kijön valakivel","topic":"Relationships"},
+  {"id":63,"en":"take care of","hu":"gondoskodik valakiről","topic":"Relationships"},
+  {"id":64,"en":"make up with sb","hu":"kibékül valakivel","topic":"Relationships"},
+  {"id":65,"en":"look up to sb","hu":"felnéz valakire","topic":"Relationships"},
+  {"id":66,"en":"take advantage of sb","hu":"kihasznál valakit","topic":"Relationships"},
+  {"id":67,"en":"quarrel / argue / have an argument with sb","hu":"veszekedik / vitatkozik valakivel","topic":"Relationships"},
+  {"id":68,"en":"fall out with sb","hu":"összezördül valakivel","topic":"Relationships"},
+  {"id":69,"en":"break / split up with sb","hu":"szakit valakivel","topic":"Relationships"},
+  {"id":70,"en":"grow apart","hu":"eltávolodik valakitől","topic":"Relationships"},
+  {"id":71,"en":"let sb down","hu":"becsap, felültet","topic":"Relationships"},
+  {"id":72,"en":"be at each other's throats","hu":"egymás torkának esnek","topic":"Relationships"},
+  {"id":73,"en":"celebrate","hu":"ünnepelni","topic":"Family events and festivals"},
+  {"id":74,"en":"custom","hu":"szokás","topic":"Family events and festivals"},
+  {"id":75,"en":"special occasion","hu":"különleges alkalom","topic":"Family events and festivals"},
+  {"id":76,"en":"family tradition","hu":"családi hagyományok","topic":"Family events and festivals"},
+  {"id":77,"en":"family gathering / reunion","hu":"családi összejövetel","topic":"Family events and festivals"},
+  {"id":78,"en":"fancy dress party","hu":"jelmezbál","topic":"Family events and festivals"},
+  {"id":79,"en":"funeral","hu":"temetés","topic":"Family events and festivals"},
+  {"id":80,"en":"graduation","hu":"érettségi/diplomaosztó","topic":"Family events and festivals"},
+  {"id":81,"en":"Christmas Eve","hu":"Szenteste","topic":"Family events and festivals"},
+  {"id":82,"en":"Easter","hu":"Húsvét","topic":"Family events and festivals"},
+  {"id":83,"en":"New Year's Eve","hu":"Szilveszter","topic":"Family events and festivals"},
+  {"id":84,"en":"wedding","hu":"esküvő","topic":"Family events and festivals"},
+  {"id":85,"en":"tie the knot","hu":"összead / megesket","topic":"Family events and festivals"},
+  {"id":86,"en":"get married/marry sb","hu":"megházasodik/elvesz vkit","topic":"Family events and festivals"},
+  {"id":87,"en":"wedding reception","hu":"lakodalom","topic":"Family events and festivals"},
+  {"id":88,"en":"engagement","hu":"eljegyzés","topic":"Family events and festivals"},
+  {"id":89,"en":"get engaged","hu":"eljegyezték","topic":"Family events and festivals"},
+  {"id":90,"en":"bride","hu":"menyasszony","topic":"Family events and festivals"},
+  {"id":91,"en":"groom","hu":"vőlegény","topic":"Family events and festivals"},
+  {"id":92,"en":"bridesmaid","hu":"koszorúslány","topic":"Family events and festivals"},
+  {"id":93,"en":"honeymoon","hu":"nászút","topic":"Family events and festivals"},
+  {"id":94,"en":"fiancé","hu":"vőlegény","topic":"Family events and festivals"},
+  {"id":95,"en":"fiancée","hu":"menyasszony","topic":"Family events and festivals"},
+  {"id":96,"en":"wedding anniversary","hu":"házassági évforduló","topic":"Family events and festivals"},
+  {"id":97,"en":"do homework","hu":"megcsinálja a házi feladatot","topic":"Everyday activities"},
+  {"id":98,"en":"get (un)dressed","hu":"felöltözik / levetkőzik","topic":"Everyday activities"},
+  {"id":99,"en":"go to bed/sleep","hu":"este lefekszik","topic":"Everyday activities"},
+  {"id":100,"en":"take/have a bath / shower","hu":"megfürdik /lezuhanyozik","topic":"Everyday activities"},
+  {"id":101,"en":"have a rest / nap","hu":"pihen / szundit","topic":"Everyday activities"},
+  {"id":102,"en":"stay up late","hu":"sokáig fent marad","topic":"Everyday activities"},
+  {"id":103,"en":"sleep in / have a lie-in","hu":"lustálkodik (az ágyban, nem kel fel)","topic":"Everyday activities"},
+  {"id":104,"en":"do the housework","hu":"házimunkát végez","topic":"Everyday activities"},
+  {"id":105,"en":"do the shopping /","hu":"bevásárol","topic":"Everyday activities"},
+  {"id":106,"en":"do ironing","hu":"vasalni","topic":"Everyday activities"},
+  {"id":107,"en":"do the washing-up","hu":"mosogatni","topic":"Everyday activities"},
+  {"id":108,"en":"make the bed","hu":"(be)ágyaz","topic":"Everyday activities"},
+  {"id":109,"en":"take the dog for a walk","hu":"megsétáltatja a kutyát","topic":"Everyday activities"},
+  {"id":110,"en":"tidy / clean up","hu":"rendet tesz / kitakarít","topic":"Everyday activities"},
+  {"id":111,"en":"set / lay the table","hu":"megtérít","topic":"Everyday activities"},
+  {"id":112,"en":"do crosswords","hu":"keresztrejtvényt fejt","topic":"Ways of spending free - time"},
+  {"id":113,"en":"play cards / board games","hu":"kártyázik / társasjátékozik","topic":"Ways of spending free - time"},
+  {"id":114,"en":"play chess","hu":"sakkozik","topic":"Ways of spending free - time"},
+  {"id":115,"en":"play a musical instrument","hu":"hangszeren játszik","topic":"Ways of spending free - time"},
+  {"id":116,"en":"play computer games","hu":"számitógépes játékokat játszik","topic":"Ways of spending free - time"},
+  {"id":117,"en":"play in a band / the guitar","hu":"zenekarban játszik / gitározok","topic":"Ways of spending free - time"},
+  {"id":118,"en":"sleep over at a friend's","hu":"egy barátnál alszik","topic":"Ways of spending free - time"},
+  {"id":119,"en":"go camping","hu":"sátorozik","topic":"Ways of spending free - time"},
+  {"id":120,"en":"go for a walk","hu":"sétál","topic":"Ways of spending free - time"},
+  {"id":121,"en":"go in for sports / mountaineering","hu":"szeret sportolni / hegyet mászni","topic":"Ways of spending free - time"},
+  {"id":122,"en":"go swimming / dancing / bowling / fishing","hu":"úszik / táncol / tekézik/ horgászik","topic":"Ways of spending free - time"},
+  {"id":123,"en":"go to a party / a concert / the cinema / the theatre/ a club","hu":"partira / koncertre / moziba / színházba / klubba jár","topic":"Ways of spending free - time"},
+  {"id":124,"en":"go to the gym","hu":"edzőterembe jár","topic":"Ways of spending free - time"},
+  {"id":125,"en":"meet / hang out with friends","hu":"találkozik / lóg a barátokkal","topic":"Ways of spending free - time"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fullscreenToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u5-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered(), c=list[idx]||list[0];
+  if(list.length&&idx>=list.length)idx=0;
+  
+  // Szűrők
+  els.f.innerHTML='';
+  ["Mind","Periods of time in people's lives","Family members","Family life","Relationships","Family events and festivals","Everyday activities","Ways of spending free - time"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  // Lista
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  // Kártya
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  // Kvíz mód
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  // Statisztika
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+els.fs.onclick=()=>{document.body.classList.toggle('fullscreen-mode');els.fs.textContent=document.body.classList.contains('fullscreen-mode')?'⤝⤞':'⤢';};
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+};
+render();
+</script></body></html>

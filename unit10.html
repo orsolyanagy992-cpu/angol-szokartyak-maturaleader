@@ -1,0 +1,317 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 10</title><style>
+:root{--ink:#064e3b;--muted:#4b5563;--line:#a7f3d0;--panel:#fff;--green:#059669;--green-light:#ecfdf5;--success:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#e6f4ea;padding:16px;transition:background .2s}
+main{width:min(1100px,100%);margin:0 auto;transition:max-width .2s}header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.header-left{flex:1;min-width:200px}h1{margin:0;font-size:28px}.stats{display:flex;gap:8px;align-items:center}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#e6f4ea}button.primary{background:var(--green);color:#fff;border-color:var(--green)}
+button.good{background:#eafaf1;color:var(--success);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px;transition:grid-template-columns .2s}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(5,150,105,0.05)}
+.progress{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(5,150,105,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#e6f4ea;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:var(--green-light);color:#047857;border-color:#a7f3d0}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+
+/* Egész képernyős mód */
+body.fs-mode{background:#f0fdf4;padding-top:40px}
+body.fs-mode main{width:min(750px,100%)}
+body.fs-mode header .header-left, body.fs-mode aside{display:none !important}
+body.fs-mode .layout{grid-template-columns:1fr}
+#fsToggle{font-weight:bold;border-color:var(--green);color:var(--green)}
+body.fs-mode #fsToggle{background:var(--green);color:#fff}
+</style></head><body><main><header><div class="header-left"><h1>Unit 10 - Kinds of sports</h1></div><section class="stats"><button id="fsToggle" title="Teljes képernyő (F gomb)">⛶ Egész képernyő</button><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"team sports","hu":"csapatsportok","topic":"Team sports"},
+  {"id":1,"en":"basketball","hu":"kosárlabda","topic":"Team sports"},
+  {"id":2,"en":"baseball","hu":"baseball","topic":"Team sports"},
+  {"id":3,"en":"cricket","hu":"kricket","topic":"Team sports"},
+  {"id":4,"en":"handball","hu":"kézilabda","topic":"Team sports"},
+  {"id":5,"en":"American football","hu":"amerikai foci","topic":"Team sports"},
+  {"id":6,"en":"football","hu":"foci / labdarúgás","topic":"Team sports"},
+  {"id":7,"en":"volleyball","hu":"röplabda","topic":"Team sports"},
+  {"id":8,"en":"rugby","hu":"rögbi","topic":"Team sports"},
+  {"id":9,"en":"water sports","hu":"vízi sportok","topic":"Water sports"},
+  {"id":10,"en":"canoeing","hu":"kenuzás","topic":"Water sports"},
+  {"id":11,"en":"kayaking","hu":"kajakozás","topic":"Water sports"},
+  {"id":12,"en":"rowing","hu":"evezés","topic":"Water sports"},
+  {"id":13,"en":"sailing","hu":"vitorlázás","topic":"Water sports"},
+  {"id":14,"en":"swimming","hu":"úszás","topic":"Water sports"},
+  {"id":15,"en":"water polo","hu":"vízilabda","topic":"Water sports"},
+  {"id":16,"en":"windsurfing","hu":"széllovaglás","topic":"Water sports"},
+  {"id":17,"en":"synchronised swimming","hu":"szinkronúszás","topic":"Water sports"},
+  {"id":18,"en":"diving","hu":"műugrás","topic":"Water sports"},
+  {"id":19,"en":"surfing","hu":"szörfözés","topic":"Water sports"},
+  {"id":20,"en":"water skiing","hu":"vízisí","topic":"Water sports"},
+  {"id":21,"en":"combat sports","hu":"küzdősportok","topic":"Combat sports"},
+  {"id":22,"en":"martial arts","hu":"harcművészetek","topic":"Combat sports"},
+  {"id":23,"en":"karate","hu":"karate","topic":"Combat sports"},
+  {"id":24,"en":"judo","hu":"dzsúdó / cselgáncs","topic":"Combat sports"},
+  {"id":25,"en":"kickboxing","hu":"kikb堅持 / kick-box","topic":"Combat sports"},
+  {"id":26,"en":"mixed martial arts (MMA)","hu":"vegyes harcművészetek","topic":"Combat sports"},
+  {"id":27,"en":"boxing","hu":"boksz / ökölvívás","topic":"Combat sports"},
+  {"id":28,"en":"wrestling","hu":"birkózás","topic":"Combat sports"},
+  {"id":29,"en":"extreme sports","hu":"extrém sportok","topic":"Extreme sports"},
+  {"id":30,"en":"bungee jumping","hu":"bungee jumping / mélyugrás","topic":"Extreme sports"},
+  {"id":31,"en":"skydiving","hu":"ejtőernyőzés","topic":"Extreme sports"},
+  {"id":32,"en":"scuba diving","hu":"búvárkodás (készülékes)","topic":"Extreme sports"},
+  {"id":33,"en":"skateboarding","hu":"gördeszkázás","topic":"Extreme sports"},
+  {"id":34,"en":"hang gliding","hu":"sárkányrepülés","topic":"Extreme sports"},
+  {"id":35,"en":"freediving","hu":"szabadtüdős merülés","topic":"Extreme sports"},
+  {"id":36,"en":"rafting","hu":"raftingolás / vadvízi evezés","topic":"Extreme sports"},
+  {"id":37,"en":"rock climbing","hu":"sziklamászás","topic":"Extreme sports"},
+  {"id":38,"en":"individual sports","hu":"egyéni sportok","topic":"Individual sports"},
+  {"id":39,"en":"cycling","hu":"kerékpározás","topic":"Individual sports"},
+  {"id":40,"en":"golf","hu":"golf","topic":"Individual sports"},
+  {"id":41,"en":"horse riding","hu":"lovaglás","topic":"Individual sports"},
+  {"id":42,"en":"table tennis","hu":"pingpong / asztalitenisz","topic":"Individual sports"},
+  {"id":43,"en":"badminton","hu":"tollaslabda","topic":"Individual sports"},
+  {"id":44,"en":"gymnastics","hu":"szertorna","topic":"Individual sports"},
+  {"id":45,"en":"archery","hu":"íjászat","topic":"Individual sports"},
+  {"id":46,"en":"fencing","hu":"vívás","topic":"Individual sports"},
+  {"id":47,"en":"motor racing","hu":"autó-motor versenyzés","topic":"Individual sports"},
+  {"id":48,"en":"tennis","hu":"tenisz","topic":"Individual sports"},
+  {"id":49,"en":"weightlifting","hu":"súlyemelés","topic":"Individual sports"},
+  {"id":50,"en":"artistic gymnastics","hu":"ritmikus gimnasztika (RSG)","topic":"Individual sports"},
+  {"id":51,"en":"winter sports","hu":"téli sportok","topic":"Winter sports"},
+  {"id":52,"en":"ice hockey","hu":"jégkorong / hoki","topic":"Winter sports"},
+  {"id":53,"en":"figure skating","hu":"műkorcsolya","topic":"Winter sports"},
+  {"id":54,"en":"speed skating","hu":"gyorskorcsolya","topic":"Winter sports"},
+  {"id":55,"en":"ski jumping","hu":"síugrás","topic":"Winter sports"},
+  {"id":56,"en":"Alpine skiing","hu":"alpesi síelés","topic":"Winter sports"},
+  {"id":57,"en":"biathlon","hu":"biatlon / egyéni összetett téli sport","topic":"Winter sports"},
+  {"id":58,"en":"snowboard","hu":"hódeszka / snowboard","topic":"Winter sports"},
+  {"id":59,"en":"curling","hu":"curling","topic":"Winter sports"},
+  {"id":60,"en":"athletics","hu":"atlétika","topic":"Athletics"},
+  {"id":61,"en":"the long jump","hu":"távolugrás","topic":"Athletics"},
+  {"id":62,"en":"the high jump","hu":"magasugrás","topic":"Athletics"},
+  {"id":63,"en":"relay race","hu":"váltófutás","topic":"Athletics"},
+  {"id":64,"en":"the hurdles","hu":"gátfutás","topic":"Athletics"},
+  {"id":65,"en":"the javelin","hu":"gerelyhajítás","topic":"Athletics"},
+  {"id":66,"en":"the discus","hu":"diszkoszvetés","topic":"Athletics"},
+  {"id":67,"en":"the hammer","hu":"kalapácsvetés","topic":"Athletics"},
+  {"id":68,"en":"the pole vault","hu":"rúdugrás","topic":"Athletics"},
+  {"id":69,"en":"archer","hu":"íjász","topic":"Sportsmen / Sportswomen"},
+  {"id":70,"en":"athlete","hu":"atléta / sportoló","topic":"Sportsmen / Sportswomen"},
+  {"id":71,"en":"boxer","hu":"ökölvívó / bokszoló","topic":"Sportsmen / Sportswomen"},
+  {"id":72,"en":"cyclist","hu":"kerékpár-versenyző","topic":"Sportsmen / Sportswomen"},
+  {"id":73,"en":"diver","hu":"búvár / toronyugró","topic":"Sportsmen / Sportswomen"},
+  {"id":74,"en":"hockey player","hu":"hokijátékos","topic":"Sportsmen / Sportswomen"},
+  {"id":75,"en":"gymnast","hu":"tornász","topic":"Sportsmen / Sportswomen"},
+  {"id":76,"en":"swimmer","hu":"úszó","topic":"Sportsmen / Sportswomen"},
+  {"id":77,"en":"amateur athlete","hu":"amatőr sportoló","topic":"Sportsmen / Sportswomen"},
+  {"id":78,"en":"professional athlete","hu":"profi sportoló","topic":"Sportsmen / Sportswomen"},
+  {"id":79,"en":"racing driver","hu":"autóversenyző","topic":"Sportsmen / Sportswomen"},
+  {"id":80,"en":"rower","hu":"evezős","topic":"Sportsmen / Sportswomen"},
+  {"id":81,"en":"rugby player","hu":"rögbijátékos","topic":"Sportsmen / Sportswomen"},
+  {"id":82,"en":"runner","hu":"futó","topic":"Sportsmen / Sportswomen"},
+  {"id":83,"en":"skater","hu":"korcsolyázó","topic":"Sportsmen / Sportswomen"},
+  {"id":84,"en":"skier","hu":"síző / síelő","topic":"Sportsmen / Sportswomen"},
+  {"id":85,"en":"weightlifter","hu":"súlyemelő","topic":"Sportsmen / Sportswomen"},
+  {"id":86,"en":"wrestler","hu":"birkózó","topic":"Sportsmen / Sportswomen"},
+  {"id":87,"en":"goalkeeper","hu":"kapus","topic":"Sportsmen / Sportswomen"},
+  {"id":88,"en":"competition / race","hu":"verseny","topic":"Sports events"},
+  {"id":89,"en":"event","hu":"versenyszám (sportágon belül)","topic":"Sports events"},
+  {"id":90,"en":"field events","hu":"dobó- és ügyességi számok","topic":"Sports events"},
+  {"id":91,"en":"track events","hu":"futószámok","topic":"Sports events"},
+  {"id":92,"en":"final","hu":"döntő","topic":"Sports events"},
+  {"id":93,"en":"quarter-final","hu":"negyeddöntő","topic":"Sports events"},
+  {"id":94,"en":"semi-final","hu":"elődöntő","topic":"Sports events"},
+  {"id":95,"en":"tournament","hu":"bajnokság / torna","topic":"Sports events"},
+  {"id":96,"en":"marathon","hu":"maraton","topic":"Sports events"},
+  {"id":97,"en":"Paralympics","hu":"Paralimpia","topic":"Sports events"},
+  {"id":98,"en":"world championship","hu":"világbajnokság","topic":"Sports events"},
+  {"id":99,"en":"the Olympic Games / Olympics","hu":"olimpiai játékok / olimpia","topic":"Sports events"},
+  {"id":100,"en":"match","hu":"meccs / mérkőzés","topic":"Sports events"},
+  {"id":101,"en":"open competition","hu":"nyílt verseny","topic":"Sports events"},
+  {"id":102,"en":"baseball bat","hu":"baseballütő","topic":"Sportszerek, felszerelések"},
+  {"id":103,"en":"table tennis bat","hu":"pingpongütő","topic":"Sportszerek, felszerelések"},
+  {"id":104,"en":"boxing gloves","hu":"bokszkesztyű","topic":"Sportszerek, felszerelések"},
+  {"id":105,"en":"hockey stick","hu":"hokiütő","topic":"Sportszerek, felszerelések"},
+  {"id":106,"en":"tennis racket","hu":"teniszütő","topic":"Sportszerek, felszerelések"},
+  {"id":107,"en":"badminton racket","hu":"tollaslabdaütő","topic":"Sportszerek, felszerelések"},
+  {"id":108,"en":"arrow","hu":"nyíl / nyílvessző","topic":"Sportszerek, felszerelések"},
+  {"id":109,"en":"catch / kick the ball","hu":"elkapja / rúgja a labdát","topic":"Sportszerek, felszerelések"},
+  {"id":110,"en":"lose / pass / win the ball","hu":"elveszíti / passzolja / megszerzi a labdát","topic":"Sportszerek, felszerelések"},
+  {"id":111,"en":"goggles","hu":"úszószemüveg / védőszemüveg","topic":"Sportszerek, felszerelések"},
+  {"id":112,"en":"golf club","hu":"golfütő","topic":"Sportszerek, felszerelések"},
+  {"id":113,"en":"gym mat","hu":"tornaszőnyeg","topic":"Sportszerek, felszerelések"},
+  {"id":114,"en":"helmet","hu":"bukósisak / sisak","topic":"Sportszerek, felszerelések"},
+  {"id":115,"en":"kit","hu":"felszerelés / sportfelszerelés","topic":"Sportszerek, felszerelések"},
+  {"id":116,"en":"paddle","hu":"evezőlapát","topic":"Sportszerek, felszerelések"},
+  {"id":117,"en":"net","hu":"háló","topic":"Sportszerek, felszerelések"},
+  {"id":118,"en":"spikes","hu":"szöges futócipő","topic":"Sportszerek, felszerelések"},
+  {"id":119,"en":"studded shoes","hu":"stoplis focicipő","topic":"Sportszerek, felszerelések"},
+  {"id":120,"en":"training shoes","hu":"edzőcipő / tornacipő","topic":"Sportszerek, felszerelések"},
+  {"id":121,"en":"swimming cap","hu":"úszósapka","topic":"Sportszerek, felszerelések"},
+  {"id":122,"en":"running track","hu":"futópálya","topic":"Sports venues"},
+  {"id":123,"en":"racecourse","hu":"versenypálya (lóverseny / autóverseny)","topic":"Sports venues"},
+  {"id":124,"en":"boxing ring","hu":"bokszring","topic":"Sports venues"},
+  {"id":125,"en":"football field / pitch","hu":"focipálya","topic":"Sports venues"},
+  {"id":126,"en":"indoor / outdoor pool","hu":"fedett / kültéri úszómedence","topic":"Sports venues"},
+  {"id":127,"en":"sports hall / stadium","hu":"sportcsarnok / stadion","topic":"Sports venues"},
+  {"id":128,"en":"sports club / field","hu":"sportegyesület / sportpálya","topic":"Sports venues"},
+  {"id":129,"en":"sporting facilities","hu":"sportolási lehetőségek / létesítmények","topic":"Sports venues"},
+  {"id":130,"en":"basketball / handball court","hu":"kosárlabda- / kézilabdapálya","topic":"Sports venues"},
+  {"id":131,"en":"badminton / volleyball court","hu":"tollaslabda- / röplabdapálya","topic":"Sports venues"},
+  {"id":132,"en":"tennis court","hu":"teniszpálya","topic":"Sports venues"},
+  {"id":133,"en":"golf course","hu":"golfpálya","topic":"Sports venues"},
+  {"id":134,"en":"ice / skating rink","hu":"műjégpálya / korcsolyapálya","topic":"Sports venues"},
+  {"id":135,"en":"ski slope / ski lift","hu":"sípálya / sífelvonó","topic":"Sports venues"},
+  {"id":136,"en":"indoor / outdoor sports","hu":"terem- / szabadtéri sportok","topic":"Sports venues"},
+  {"id":137,"en":"sports centre / complex","hu":"sportközpont / sportkomplexum","topic":"Sports venues"},
+  {"id":138,"en":"break the record","hu":"rekordot dönt","topic":"Other words and phrases"},
+  {"id":139,"en":"set a new record","hu":"új csúcsot állít fel","topic":"Other words and phrases"},
+  {"id":140,"en":"hold the record","hu":"tartja a rekordot / csúcsot","topic":"Other words and phrases"},
+  {"id":141,"en":"bring on a substitute","hu":"cserejátékost állít be","topic":"Other words and phrases"},
+  {"id":142,"en":"champion","hu":"bajnok","topic":"Other words and phrases"},
+  {"id":143,"en":"coach / trainer","hu":"edző","topic":"Other words and phrases"},
+  {"id":144,"en":"defeat (n)","hu":"vereség","topic":"Other words and phrases"},
+  {"id":145,"en":"defeat / beat (v)","hu":"legyőz / megver","topic":"Other words and phrases"},
+  {"id":146,"en":"draw","hu":"döntetlen","topic":"Other words and phrases"},
+  {"id":147,"en":"eliminations","hu":"kiesők / selejtezők","topic":"Other words and phrases"},
+  {"id":148,"en":"fair play","hu":"tisztességes játék","topic":"Other words and phrases"},
+  {"id":149,"en":"finalist","hu":"döntős","topic":"Other words and phrases"},
+  {"id":150,"en":"foul / commit a foul","hu":"szabálytalanság / szabálytalanságot követ el","topic":"Other words and phrases"},
+  {"id":151,"en":"game","hu":"játék / mérkőzés","topic":"Other words and phrases"},
+  {"id":152,"en":"substitute","hu":"cserejátékos / póttag","topic":"Other words and phrases"},
+  {"id":153,"en":"take a penalty","hu":"büntetőt rúg / végez el","topic":"Other words and phrases"},
+  {"id":154,"en":"disqualified","hu":"kizárják / diszkvalifikálják","topic":"Other words and phrases"},
+  {"id":155,"en":"team captain","hu":"csapatkapitány","topic":"Other words and phrases"},
+  {"id":156,"en":"drug abuse","hu":"tiltott szerekkel / doppinggal való visszaélés","topic":"Other words and phrases"},
+  {"id":157,"en":"fixed match","hu":"bundameccs / csalt mérkőzés","topic":"Other words and phrases"},
+  {"id":158,"en":"be in good form / shape","hu":"jó formában van","topic":"Other words and phrases"},
+  {"id":159,"en":"locker / changing room","hu":"öltözőszekrény / öltöző","topic":"Other words and phrases"},
+  {"id":160,"en":"medallist","hu":"érmes","topic":"Other words and phrases"},
+  {"id":161,"en":"national team","hu":"nemzeti csapat / válogatott","topic":"Other words and phrases"},
+  {"id":162,"en":"personal best","hu":"egyéni legjobb eredmény","topic":"Other words and phrases"},
+  {"id":163,"en":"play offence / defence","hu":"támadó / védekező játékot játszik","topic":"Other words and phrases"},
+  {"id":164,"en":"practise a sport","hu":"sportol / sportot űz","topic":"Other words and phrases"},
+  {"id":165,"en":"score (n)","hu":"ponteredmény / állás","topic":"Other words and phrases"},
+  {"id":166,"en":"shoot / score a goal","hu":"gólt lő","topic":"Other words and phrases"},
+  {"id":167,"en":"spectator","hu":"néző / szurkoló","topic":"Other words and phrases"},
+  {"id":168,"en":"training / train","hu":"edzés / edz","topic":"Other words and phrases"},
+  {"id":169,"en":"train for","hu":"gyakorol / edz valamire","topic":"Other words and phrases"},
+  {"id":170,"en":"training camp","hu":"edzőtábor","topic":"Other words and phrases"},
+  {"id":171,"en":"warm-up","hu":"bemelegítés","topic":"Other words and phrases"},
+  {"id":172,"en":"break the rules","hu":"megszegi a szabályokat","topic":"Other words and phrases"},
+  {"id":173,"en":"be suspended","hu":"felfüggesztik a játékjogát","topic":"Other words and phrases"},
+  {"id":174,"en":"cheat","hu":"csal","topic":"Other words and phrases"},
+  {"id":175,"en":"fail a drug test","hu":"fennakad a doppingvizsgálaton","topic":"Other words and phrases"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fsToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u10-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function toggleFullscreen(){
+  document.body.classList.toggle('fs-mode');
+  if(document.body.classList.contains('fs-mode')){
+    els.fs.textContent='🗗 Normál nézet';
+  }else{
+    els.fs.textContent='⛶ Egész képernyő';
+  }
+}
+els.fs.onclick=toggleFullscreen;
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered();
+  if(list.length && idx>=list.length)idx=0;
+  const c=list[idx]||list[0];
+  
+  els.f.innerHTML='';
+  ["Mind","Team sports","Water sports","Combat sports","Extreme sports","Individual sports","Winter sports","Athletics","Sportsmen / Sportswomen","Sports events","Sportszerek, felszerelések","Sports venues","Other words and phrases"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+  if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+};
+render();
+</script></body></html>

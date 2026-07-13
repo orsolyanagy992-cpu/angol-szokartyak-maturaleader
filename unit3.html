@@ -1,0 +1,243 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 3</title><style>
+:root{--ink:#17202a;--muted:#637083;--line:#d8dee8;--panel:#fff;--blue:#6d28d9;--green:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#f5f0fa;padding:16px}
+main{width:min(1100px,100%);margin:0 auto}header{display:flex;flex-wrap:wrap;justify-content:between;align-items:center;gap:12px;margin-bottom:16px}
+h1{margin:0;font-size:28px}.stats{display:flex;gap:8px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#f3f4f6}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+button.good{background:#eafaf1;color:var(--green);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.progress{height:8px;background:#e7ebf2;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(0,0,0,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#eef2f6;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:#f3e8ff;color:#6d28d9;border-color:#d8b4fe}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+body.fullscreen-mode{padding:0}
+body.fullscreen-mode main{width:min(800px,calc(100% - 32px));padding-top:40px}
+body.fullscreen-mode header,body.fullscreen-mode aside{display:none!important}
+body.fullscreen-mode .layout{grid-template-columns:1fr}
+.fullscreen-btn{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;font-size:20px;padding:0 12px}
+</style></head><body><main><header><h1>Unit 3 - Szótanuló</h1><section class="stats"><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section><button id="fullscreenToggle" class="fullscreen-btn">⤢</button></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"Art","hu":"művészeti tárgyak","topic":"Subjects"},
+  {"id":1,"en":"Biology","hu":"biológia","topic":"Subjects"},
+  {"id":2,"en":"Business Studies","hu":"üzleti tanulmányok","topic":"Subjects"},
+  {"id":3,"en":"Chemistry","hu":"kémia","topic":"Subjects"},
+  {"id":4,"en":"foreign languages","hu":"idegen nyelvek","topic":"Subjects"},
+  {"id":5,"en":"Geography","hu":"földrajz","topic":"Subjects"},
+  {"id":6,"en":"History","hu":"történelem","topic":"Subjects"},
+  {"id":7,"en":"Mathematics / Maths","hu":"matematika / matek","topic":"Subjects"},
+  {"id":8,"en":"PE","hu":"testnevelés","topic":"Subjects"},
+  {"id":9,"en":"Physics","hu":"fizika","topic":"Subjects"},
+  {"id":10,"en":"Science","hu":"természettudományos tárgyak","topic":"Subjects"},
+  {"id":11,"en":"Religious Education","hu":"hittan","topic":"Subjects"},
+  {"id":12,"en":"Literature","hu":"irodalom","topic":"Subjects"},
+  {"id":13,"en":"ICT / IT","hu":"informatika","topic":"Subjects"},
+  {"id":14,"en":"nursery school (BrE) / kindergarten (AmE)","hu":"óvoda","topic":"Educational System"},
+  {"id":15,"en":"primary school (BrE) / elementary school (AmE)","hu":"általános iskola","topic":"Educational System"},
+  {"id":16,"en":"secondary school (BrE) / high school (AmE)","hu":"középiskola","topic":"Educational System"},
+  {"id":17,"en":"college","hu":"főiskola","topic":"Educational System"},
+  {"id":18,"en":"university","hu":"egyetem","topic":"Educational System"},
+  {"id":19,"en":"technical school","hu":"technikum","topic":"Educational System"},
+  {"id":20,"en":"vocational school / trade school (AmE)","hu":"szakiskola","topic":"Educational System"},
+  {"id":21,"en":"boarding school","hu":"bentlakásos iskola","topic":"Educational System"},
+  {"id":22,"en":"evening classes","hu":"esti tagozat","topic":"Educational System"},
+  {"id":23,"en":"homeschooling","hu":"otthonoktatás, iskolán kívüli tanulás","topic":"Educational System"},
+  {"id":24,"en":"language school","hu":"nyelviskola","topic":"Educational System"},
+  {"id":25,"en":"private school","hu":"magániskola","topic":"Educational System"},
+  {"id":26,"en":"state school (BrE) / public school (AmE)","hu":"állami iskola","topic":"Educational System"},
+  {"id":27,"en":"Further / Higher Education","hu":"Továbbtanulás / Felsőoktatás","topic":"Educational System"},
+  {"id":28,"en":"blackboard / whiteboard / interactive whiteboard","hu":"tábla / okostábla","topic":"Places at school"},
+  {"id":29,"en":"canteen","hu":"menza","topic":"Places at school"},
+  {"id":30,"en":"classroom","hu":"osztályterem","topic":"Places at school"},
+  {"id":31,"en":"computer lab","hu":"számítógépes terem","topic":"Places at school"},
+  {"id":32,"en":"gym","hu":"tornaterem","topic":"Places at school"},
+  {"id":33,"en":"timetable","hu":"órarend","topic":"Places at school"},
+  {"id":34,"en":"free period","hu":"lyukasóra","topic":"Places at school"},
+  {"id":35,"en":"class tutor","hu":"osztályfőnök","topic":"Places at school"},
+  {"id":36,"en":"sports field","hu":"sportpálya","topic":"Places at school"},
+  {"id":37,"en":"staff room","hu":"tanári szoba","topic":"Places at school"},
+  {"id":38,"en":"headmaster's office","hu":"igazgatói iroda","topic":"Places at school"},
+  {"id":39,"en":"library","hu":"könyvtár","topic":"Places at school"},
+  {"id":40,"en":"science lab","hu":"természettudományos labor","topic":"Places at school"},
+  {"id":41,"en":"certificate","hu":"bizonyítvány","topic":"Places at school"},
+  {"id":42,"en":"school report","hu":"tanulmányi értesítő","topic":"Places at school"},
+  {"id":43,"en":"term","hu":"tanév / félév","topic":"Places at school"},
+  {"id":44,"en":"enrol at an institution / on a course","hu":"beiratkozik intézménybe / tanfolyamra","topic":"Studying"},
+  {"id":45,"en":"attend lessons / classes","hu":"órákra jár","topic":"Studying"},
+  {"id":46,"en":"attendance","hu":"jelenlét","topic":"Studying"},
+  {"id":47,"en":"absence","hu":"hiányzás","topic":"Studying"},
+  {"id":48,"en":"be present","hu":"jelen van","topic":"Studying"},
+  {"id":49,"en":"be absent","hu":"hiányzik","topic":"Studying"},
+  {"id":50,"en":"skip / miss lessons / classes","hu":"lóg az órákról","topic":"Studying"},
+  {"id":51,"en":"attention span","hu":"koncentráció időtartama","topic":"Studying"},
+  {"id":52,"en":"pass an exam","hu":"átmegy a vizsgán","topic":"Studying"},
+  {"id":53,"en":"fail an exam","hu":"megbukik a vizsgán","topic":"Studying"},
+  {"id":54,"en":"take / sit an exam","hu":"vizsgázik","topic":"Studying"},
+  {"id":55,"en":"resit / retake a test","hu":"javító dolgozatot ír","topic":"Studying"},
+  {"id":56,"en":"cheat in the exam","hu":"csal a vizsgán","topic":"Studying"},
+  {"id":57,"en":"revise for an exam","hu":"ismétel vizsgára","topic":"Studying"},
+  {"id":58,"en":"final exam","hu":"záróvizsga","topic":"Studying"},
+  {"id":59,"en":"school-leaving exams","hu":"érettségi vizsgák","topic":"Studying"},
+  {"id":60,"en":"competition","hu":"verseny","topic":"Studying"},
+  {"id":61,"en":"compete","hu":"versenyez","topic":"Studying"},
+  {"id":62,"en":"assignment","hu":"beadandó feladat","topic":"Studying"},
+  {"id":63,"en":"cram","hu":"magol","topic":"Studying"},
+  {"id":64,"en":"oral / spoken exam","hu":"szóbeli vizsga","topic":"Studying"},
+  {"id":65,"en":"special needs education","hu":"gyógypedagógia","topic":"Studying"},
+  {"id":66,"en":"enrolment","hu":"felvétel, beiratkozás","topic":"Studying"},
+  {"id":67,"en":"be expelled from school","hu":"kizárják az iskolából","topic":"Studying"},
+  {"id":68,"en":"be a straight A student","hu":"színjeles tanuló","topic":"Studying"},
+  {"id":69,"en":"be a know-it-all","hu":"mindenttudó","topic":"Studying"},
+  {"id":70,"en":"bookworm","hu":"könyvmoly","topic":"Studying"},
+  {"id":71,"en":"get marks / grades","hu":"jegyeket kap","topic":"Studying"},
+  {"id":72,"en":"extracurricular activities","hu":"szakkörök, tanórán kívüli tevékenységek","topic":"Studying"},
+  {"id":73,"en":"concentrate","hu":"koncentrál","topic":"Studying"},
+  {"id":74,"en":"concentration","hu":"koncentráció","topic":"Studying"},
+  {"id":75,"en":"student exchange","hu":"diákcsere","topic":"Studying"},
+  {"id":76,"en":"excel","hu":"kitűnik, kiemelkedik","topic":"Studying"},
+  {"id":77,"en":"gifted / talented student","hu":"tehetséges diák","topic":"Studying"},
+  {"id":78,"en":"parent-teacher meeting","hu":"szülői értekezlet","topic":"Studying"},
+  {"id":79,"en":"learn by heart","hu":"kívülről megtanul","topic":"Studying"},
+  {"id":80,"en":"literacy","hu":"műveltség / írni-olvasni tudás","topic":"Studying"},
+  {"id":81,"en":"illiteracy","hu":"írástudatlanság","topic":"Studying"},
+  {"id":82,"en":"make mistakes","hu":"hibázik","topic":"Studying"},
+  {"id":83,"en":"make progress","hu":"haladást ér el","topic":"Studying"},
+  {"id":84,"en":"memorise","hu":"memorizál","topic":"Studying"},
+  {"id":85,"en":"pass with flying colours","hu":"kitűnő eredménnyel vizsgázik","topic":"Studying"},
+  {"id":86,"en":"take / do a course in","hu":"tanfolyamot végez","topic":"Studying"},
+  {"id":87,"en":"bully","hu":"erőszakoskodó, terrorizáló személy","topic":"Violence at school"},
+  {"id":88,"en":"victim","hu":"áldozat","topic":"Violence at school"},
+  {"id":89,"en":"boost sb's confidence","hu":"növeli az önbizalmát","topic":"Violence at school"},
+  {"id":90,"en":"physical and verbal abuse","hu":"fizikai és szóbeli bántalmazás","topic":"Violence at school"},
+  {"id":91,"en":"violent","hu":"erőszakos","topic":"Violence at school"},
+  {"id":92,"en":"violence","hu":"erőszak","topic":"Violence at school"},
+  {"id":93,"en":"catch up","hu":"felzárkózik","topic":"Vonzatos igék"},
+  {"id":94,"en":"drop out","hu":"lemorzsolódik","topic":"Vonzatos igék"},
+  {"id":95,"en":"fall behind","hu":"lemarad","topic":"Vonzatos igék"},
+  {"id":96,"en":"hand in","hu":"bead, benyújt","topic":"Vonzatos igék"},
+  {"id":97,"en":"keep up","hu":"lépést tart","topic":"Vonzatos igék"},
+  {"id":98,"en":"tell sb off","hu":"leszid valakit","topic":"Vonzatos igék"},
+  {"id":99,"en":"hopeless at","hu":"reménytelen valamiben","topic":"Vonzatos igék"},
+  {"id":100,"en":"anxious about","hu":"feszült / aggódik valami miatt","topic":"Vonzatos igék"},
+  {"id":101,"en":"curious about","hu":"kíváncsi valamire","topic":"Vonzatos igék"},
+  {"id":102,"en":"be fond of","hu":"szeret valamiért rajongani","topic":"Vonzatos igék"},
+  {"id":103,"en":"excellent at / good at / terrible at","hu":"kiváló / jó / pocsék valamiben","topic":"Vonzatos igék"},
+  {"id":104,"en":"pleased with","hu":"elégedett valamivel","topic":"Vonzatos igék"},
+  {"id":105,"en":"be late for","hu":"elkésik valahonnan","topic":"Vonzatos igék"},
+  {"id":106,"en":"qualified for","hu":"képesített valamire","topic":"Vonzatos igék"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fullscreenToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u3-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered(), c=list[idx]||list[0];
+  if(list.length&&idx>=list.length)idx=0;
+  
+  // Szűrők
+  els.f.innerHTML='';
+  ['Mind','Subjects','Educational System','Places at school','Studying','Violence at school','Vonzatos igék'].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  // Lista
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  // Kártya
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  // Kvíz mód
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  // Statisztika
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+
+els.fs.onclick=()=>{
+ document.body.classList.toggle('fullscreen-mode');
+ els.fs.textContent=document.body.classList.contains('fullscreen-mode')?'⤝⤞':'⤢';
+};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+};
+render();
+</script></body></html>

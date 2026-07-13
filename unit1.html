@@ -1,0 +1,345 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló memóriakártyák</title><style>
+:root{--ink:#17202a;--muted:#637083;--line:#d8dee8;--paper:#ffffff;--panel:#fff;--blue:#2563eb;--green:#15803d;--red:#b42318;--shadow:0 18px 50px rgba(23,32,42,.14)}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background-color:#ebf3fc;transition:background .2s}
+main{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:26px 0 34px;transition:max-width .2s}
+header{display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:end;margin-bottom:18px}
+h1{margin:0 0 5px;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:0}
+.sub{margin:0;color:var(--muted);font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(92px,1fr));gap:8px;min-width:310px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat span{color:var(--muted);font-size:12px}
+.fullscreen-btn{min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:0 14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px}
+.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin:18px 0;align-items:center}
+input,select,button{font:inherit}
+input,select{width:100%;min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:0 12px}
+button{min-height:42px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);padding:0 14px;cursor:pointer;transition:transform .12s,border-color .12s,background .12s}
+button:hover{transform:translateY(-1px);border-color:#aeb9c8}
+button:active{transform:translateY(0)}
+button.primary{background:var(--blue);border-color:var(--blue);color:white}
+button.good{background:#e9f8ee;border-color:#afe0bd;color:var(--green)}
+button.hard{background:#fff1ed;border-color:#fac7bd;color:var(--red)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr)315px;gap:18px;align-items:start}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;box-shadow:var(--shadow)}
+.progress{height:10px;background:#e7ebf2;border-radius:99px;overflow:hidden;margin-bottom:16px}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:330px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(rgba(37,99,235,0.08) 1px,transparent 1px),var(--paper);background-size:100% 32px;padding:28px;text-align:center;cursor:pointer;user-select:none;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.card small{position:absolute;top:14px;left:16px;color:var(--muted);font-weight:700;text-transform:uppercase;font-size:12px}
+.term{max-width:100%;font-size:clamp(34px,6vw,68px);line-height:1.05;overflow-wrap:anywhere;background:var(--paper);padding:4px 8px}
+.answer{margin-top:12px;color:var(--muted);font-size:15px;background:var(--paper);padding:2px 6px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.quiz{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.quiz button{min-height:58px;white-space:normal;line-height:1.2}
+aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.box h2{margin:0 0 10px;font-size:17px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:34px;padding:0 10px;border-radius:99px;background:#f3f5f9}
+.chip.active{background:#e7f0ff;border-color:#91b6ff;color:#174ea6}
+.list{max-height:310px;overflow:auto;display:grid;gap:7px;padding-right:4px}
+.row{display:grid;grid-template-columns:1fr;gap:2px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fbfcff;cursor:pointer;text-align:left}
+.row b,.row span{overflow-wrap:anywhere}
+.row span{color:var(--muted);font-size:13px}
+.empty{display:none;padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:8px;background:white}
+
+body.fullscreen-mode main{width:min(800px,calc(100% - 32px));padding-top:40px}
+body.fullscreen-mode header, body.fullscreen-mode aside{display:none !important}
+body.fullscreen-mode .layout{grid-template-columns:1fr}
+
+@media(max-width:850px){
+    header,.layout,.toolbar{grid-template-columns:1fr}
+    .stats{min-width:0}
+    .actions{grid-template-columns:repeat(2,1fr)}
+    .actions button.primary{grid-column:span 2}
+    .quiz{grid-template-columns:1fr}
+    .card{min-height:280px}
+    header{grid-template-columns:1fr auto}
+    .fullscreen-btn{grid-row:1;justify-self:end}
+}
+</style></head><body><main><header><div><h1>Szótanuló memóriakártyák</h1><p class="sub">Interaktív gyakorló a szójegyzék anyagából.</p></div><section class="stats"><div class="stat"><b id="seenCount">0</b><span>átvett</span></div><div class="stat"><b id="knownCount">0</b><span>tudom</span></div><div class="stat"><b id="hardCount">0</b><span>gyakorlandó</span></div></section><button id="fullscreenToggle" class="fullscreen-btn" title="Egész képernyős mód">⤢</button></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés angolul vagy magyarul"><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> magyar</option><option value="hu-en">Magyar -> angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="progress"></span></div><div id="empty" class="empty">Nincs találat erre a keresésre.</div><article id="card" class="card" tabindex="0"><small id="cardMeta">1 / 1</small><div><div id="term" class="term"></div><div id="answer" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Következő</button><button id="hard" class="hard">Gyakorolni</button><button id="known" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Válogatás</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szókártyák</h2><div class="list" id="wordList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"first name","hu":"keresztnév","topic":"Personal details"},
+  {"id":1,"en":"surname / last name","hu":"vezetéknév","topic":"Personal details"},
+  {"id":2,"en":"middle name","hu":"középső név","topic":"Personal details"},
+  {"id":3,"en":"nickname","hu":"becenév","topic":"Personal details"},
+  {"id":4,"en":"gender / sex","hu":"nem","topic":"Personal details"},
+  {"id":5,"en":"female","hu":"nő","topic":"Personal details"},
+  {"id":6,"en":"male","hu":"férfi","topic":"Personal details"},
+  {"id":7,"en":"age","hu":"életkor","topic":"Personal details"},
+  {"id":8,"en":"marital status","hu":"családi állapot","topic":"Personal details"},
+  {"id":9,"en":"single","hu":"egyedülálló","topic":"Personal details"},
+  {"id":10,"en":"married","hu":"házas","topic":"Personal details"},
+  {"id":11,"en":"divorced","hu":"elvált","topic":"Personal details"},
+  {"id":12,"en":"widowed","hu":"özvegy","topic":"Personal details"},
+  {"id":13,"en":"citizenship","hu":"állampolgárság","topic":"Personal details"},
+  {"id":14,"en":"nationality","hu":"nemzetiség","topic":"Personal details"},
+  {"id":15,"en":"suit","hu":"öltöny","topic":"Clothes"},
+  {"id":16,"en":"tracksuit","hu":"melegítő","topic":"Clothes"},
+  {"id":17,"en":"underwear","hu":"alsónemű","topic":"Clothes"},
+  {"id":18,"en":"vest","hu":"mellény","topic":"Clothes"},
+  {"id":19,"en":"baggy","hu":"buggyos","topic":"Clothes"},
+  {"id":20,"en":"formal / elegant / smart","hu":"elegáns","topic":"Clothes"},
+  {"id":21,"en":"long-sleeved","hu":"hosszú ujjú","topic":"Clothes"},
+  {"id":22,"en":"short-sleeved","hu":"rövid ujjú","topic":"Clothes"},
+  {"id":23,"en":"sleeveless","hu":"ujjatlan","topic":"Clothes"},
+  {"id":24,"en":"tight-fitting","hu":"testhezálló","topic":"Clothes"},
+  {"id":25,"en":"loose-fitting","hu":"laza szabású","topic":"Clothes"},
+  {"id":26,"en":"denim","hu":"farmeranyagú","topic":"Clothes"},
+  {"id":27,"en":"lace","hu":"csipke","topic":"Clothes"},
+  {"id":28,"en":"silk","hu":"selyem","topic":"Clothes"},
+  {"id":29,"en":"checked","hu":"kockás","topic":"Clothes"},
+  {"id":30,"en":"floral","hu":"virágos","topic":"Clothes"},
+  {"id":31,"en":"striped","hu":"csíkos","topic":"Clothes"},
+  {"id":32,"en":"second-hand","hu":"használt","topic":"Clothes"},
+  {"id":33,"en":"knitted","hu":"kötött","topic":"Clothes"},
+  {"id":34,"en":"casual","hu":"hétköznapi","topic":"Clothes"},
+  {"id":35,"en":"cotton","hu":"pamut","topic":"Clothes"},
+  {"id":36,"en":"fur","hu":"szőrme","topic":"Clothes"},
+  {"id":37,"en":"leather","hu":"bőr","topic":"Clothes"},
+  {"id":38,"en":"wool","hu":"gyapjú","topic":"Clothes"},
+  {"id":39,"en":"dotted","hu":"pöttyös","topic":"Clothes"},
+  {"id":40,"en":"plain","hu":"sima, egyszínű","topic":"Clothes"},
+  {"id":41,"en":"cap","hu":"sapka","topic":"Clothes"},
+  {"id":42,"en":"belt","hu":"öv","topic":"Clothes"},
+  {"id":43,"en":"necklace","hu":"nyaklánc","topic":"Clothes"},
+  {"id":44,"en":"jewellery","hu":"ékszer","topic":"Clothes"},
+  {"id":45,"en":"scarf","hu":"sál","topic":"Clothes"},
+  {"id":46,"en":"hat","hu":"kalap","topic":"Clothes"},
+  {"id":47,"en":"bracelet","hu":"karkötő","topic":"Clothes"},
+  {"id":48,"en":"ring","hu":"gyűrű","topic":"Clothes"},
+  {"id":49,"en":"gloves","hu":"kesztyű","topic":"Clothes"},
+  {"id":50,"en":"tie / bow tie","hu":"nyakkendő / csokornyakkendő","topic":"Clothes"},
+  {"id":51,"en":"tights","hu":"harisnya","topic":"Clothes"},
+  {"id":52,"en":"collar","hu":"gallér","topic":"Clothes"},
+  {"id":53,"en":"boots","hu":"bakancs","topic":"Clothes"},
+  {"id":54,"en":"trainers / sneakers","hu":"tornacipő","topic":"Clothes"},
+  {"id":55,"en":"slippers","hu":"papucs","topic":"Clothes"},
+  {"id":56,"en":"flip-flops","hu":"strandpapucs","topic":"Clothes"},
+  {"id":57,"en":"high heels","hu":"magassarkú","topic":"Clothes"},
+  {"id":58,"en":"wellingtons","hu":"gumicsizma","topic":"Clothes"},
+  {"id":59,"en":"beautiful","hu":"szép, csinos","topic":"Appearance"},
+  {"id":60,"en":"pretty","hu":"csinos","topic":"Appearance"},
+  {"id":61,"en":"attractive","hu":"vonzó","topic":"Appearance"},
+  {"id":62,"en":"good-looking","hu":"jól néz ki","topic":"Appearance"},
+  {"id":63,"en":"ordinary-looking","hu":"átlagos kinézetű","topic":"Appearance"},
+  {"id":64,"en":"handsome","hu":"jóképű","topic":"Appearance"},
+  {"id":65,"en":"newborn baby","hu":"újszülött","topic":"Appearance"},
+  {"id":66,"en":"toddler","hu":"totyogó","topic":"Appearance"},
+  {"id":67,"en":"adult","hu":"felnőtt","topic":"Appearance"},
+  {"id":68,"en":"elderly","hu":"idős","topic":"Appearance"},
+  {"id":69,"en":"infant","hu":"csecsemő","topic":"Appearance"},
+  {"id":70,"en":"adolescent / teenager","hu":"kamasz","topic":"Appearance"},
+  {"id":71,"en":"middle-aged","hu":"középkorú","topic":"Appearance"},
+  {"id":72,"en":"overweight / obese","hu":"kövér","topic":"Appearance"},
+  {"id":73,"en":"athletic","hu":"sportos","topic":"Appearance"},
+  {"id":74,"en":"chubby / plump","hu":"duci","topic":"Appearance"},
+  {"id":75,"en":"muscular","hu":"izmos","topic":"Appearance"},
+  {"id":76,"en":"well-built","hu":"jó felépítésű","topic":"Appearance"},
+  {"id":77,"en":"skinny / thin / slim","hu":"vékony","topic":"Appearance"},
+  {"id":78,"en":"round face","hu":"kerek arc","topic":"Appearance"},
+  {"id":79,"en":"oval face","hu":"ovális arc","topic":"Appearance"},
+  {"id":80,"en":"long face","hu":"hosszú arc","topic":"Appearance"},
+  {"id":81,"en":"thin face","hu":"vékony arc","topic":"Appearance"},
+  {"id":82,"en":"dimples","hu":"gödröcskék","topic":"Appearance"},
+  {"id":83,"en":"cheeks","hu":"orca","topic":"Appearance"},
+  {"id":84,"en":"freckles","hu":"szeplő","topic":"Appearance"},
+  {"id":85,"en":"moustache","hu":"bajusz","topic":"Appearance"},
+  {"id":86,"en":"beard","hu":"szakáll","topic":"Appearance"},
+  {"id":87,"en":"forehead","hu":"homlok","topic":"Appearance"},
+  {"id":88,"en":"chin","hu":"áll / toka","topic":"Appearance"},
+  {"id":89,"en":"wrinkled","hu":"ráncos","topic":"Appearance"},
+  {"id":90,"en":"blonde / fair hair","hu":"szőke / világos haj","topic":"Appearance"},
+  {"id":91,"en":"straight / wavy / curly hair","hu":"egyenes / hullámos / göndör haj","topic":"Appearance"},
+  {"id":92,"en":"ponytail","hu":"lófarok","topic":"Appearance"},
+  {"id":93,"en":"bald","hu":"kopasz","topic":"Appearance"},
+  {"id":94,"en":"spiky / cropped hair","hu":"tüskés / rövidre nyírt haj","topic":"Appearance"},
+  {"id":95,"en":"fringe","hu":"frufru","topic":"Appearance"},
+  {"id":96,"en":"wig","hu":"paróka","topic":"Appearance"},
+  {"id":97,"en":"short hair","hu":"rövid haj","topic":"Appearance"},
+  {"id":98,"en":"long hair","hu":"hosszú haj","topic":"Appearance"},
+  {"id":99,"en":"medium-length hair","hu":"közepesen hosszú haj","topic":"Appearance"},
+  {"id":100,"en":"shoulder-length hair","hu":"vállig érő haj","topic":"Appearance"},
+  {"id":101,"en":"dark hair","hu":"sötét haj","topic":"Appearance"},
+  {"id":102,"en":"red hair","hu":"vörös haj","topic":"Appearance"},
+  {"id":103,"en":"grey hair","hu":"ősz haj","topic":"Appearance"},
+  {"id":104,"en":"dyed hair","hu":"festett haj","topic":"Appearance"},
+  {"id":105,"en":"active","hu":"aktív","topic":"Character and personality"},
+  {"id":106,"en":"inactive","hu":"inaktív","topic":"Character and personality"},
+  {"id":107,"en":"hard-working","hu":"szorgalmas","topic":"Character and personality"},
+  {"id":108,"en":"clever","hu":"okos","topic":"Character and personality"},
+  {"id":109,"en":"smart","hu":"okos","topic":"Character and personality"},
+  {"id":110,"en":"talented","hu":"tehetséges","topic":"Character and personality"},
+  {"id":111,"en":"ambitious","hu":"ambiciózus","topic":"Character and personality"},
+  {"id":112,"en":"driven","hu":"törekvő","topic":"Character and personality"},
+  {"id":113,"en":"determined","hu":"határozott","topic":"Character and personality"},
+  {"id":114,"en":"caring","hu":"gondoskodó","topic":"Character and personality"},
+  {"id":115,"en":"kind","hu":"kedves","topic":"Character and personality"},
+  {"id":116,"en":"helpful","hu":"segítőkész","topic":"Character and personality"},
+  {"id":117,"en":"honest","hu":"őszinte","topic":"Character and personality"},
+  {"id":118,"en":"generous","hu":"nagylelkű","topic":"Character and personality"},
+  {"id":119,"en":"cheerful","hu":"vidám","topic":"Character and personality"},
+  {"id":120,"en":"easy-going","hu":"laza","topic":"Character and personality"},
+  {"id":121,"en":"friendly","hu":"barátságos","topic":"Character and personality"},
+  {"id":122,"en":"outgoing","hu":"társaságkedvelő","topic":"Character and personality"},
+  {"id":123,"en":"confident","hu":"magabiztos","topic":"Character and personality"},
+  {"id":124,"en":"unpredictable","hu":"kiszámíthatatlan","topic":"Character and personality"},
+  {"id":125,"en":"patient","hu":"türelmes","topic":"Character and personality"},
+  {"id":126,"en":"polite","hu":"udvarias","topic":"Character and personality"},
+  {"id":127,"en":"independent","hu":"független","topic":"Character and personality"},
+  {"id":128,"en":"responsible","hu":"felelősségteljes","topic":"Character and personality"},
+  {"id":129,"en":"reliable","hu":"megbízható","topic":"Character and personality"},
+  {"id":130,"en":"mature","hu":"érett","topic":"Character and personality"},
+  {"id":131,"en":"sensitive","hu":"érzékeny","topic":"Character and personality"},
+  {"id":132,"en":"talkative","hu":"beszédes","topic":"Character and personality"},
+  {"id":133,"en":"messy","hu":"rendetlen","topic":"Character and personality"},
+  {"id":134,"en":"trustworthy","hu":"megbízható","topic":"Character and personality"},
+  {"id":135,"en":"predictable","hu":"kiszámítható","topic":"Character and personality"},
+  {"id":136,"en":"lazy","hu":"lusta","topic":"Character and personality"},
+  {"id":137,"en":"selfish","hu":"önző","topic":"Character and personality"},
+  {"id":138,"en":"spoilt","hu":"elkényeztetett","topic":"Character and personality"},
+  {"id":139,"en":"rude","hu":"bunkó","topic":"Character and personality"},
+  {"id":140,"en":"dishonest","hu":"nem őszinte","topic":"Character and personality"},
+  {"id":141,"en":"mean","hu":"zsugori","topic":"Character and personality"},
+  {"id":142,"en":"stubborn","hu":"makacs","topic":"Character and personality"},
+  {"id":143,"en":"reserved","hu":"tartózkodó","topic":"Character and personality"},
+  {"id":144,"en":"shy","hu":"szégyenlős","topic":"Character and personality"},
+  {"id":145,"en":"strict","hu":"szigorú","topic":"Character and personality"},
+  {"id":146,"en":"jealous","hu":"féltékeny","topic":"Character and personality"},
+  {"id":147,"en":"impatient","hu":"türelmetlen","topic":"Character and personality"},
+  {"id":148,"en":"impolite","hu":"udvariatlan","topic":"Character and personality"},
+  {"id":149,"en":"dependent","hu":"függő","topic":"Character and personality"},
+  {"id":150,"en":"irresponsible","hu":"felelőtlen","topic":"Character and personality"},
+  {"id":151,"en":"unreliable","hu":"megbízhatatlan","topic":"Character and personality"},
+  {"id":152,"en":"immature","hu":"éretlen","topic":"Character and personality"},
+  {"id":153,"en":"insensitive","hu":"érzéketlen","topic":"Character and personality"}
+];
+
+const $=s=>document.querySelector(s);
+const els={
+  search:$('#search'),mode:$('#mode'),direction:$('#direction'),filters:$('#filters'),
+  wordList:$('#wordList'),card:$('#card'),cardMeta:$('#cardMeta'),term:$('#term'),
+  answer:$('#answer'),quiz:$('#quiz'),empty:$('#empty'),progress:$('#progress'),
+  seenCount:$('#seenCount'),knownCount:$('#knownCount'),hardCount:$('#hardCount'),
+  prev:$('#prev'),next:$('#next'),flip:$('#flip'),known:$('#known'),hard:$('#hard'),
+  fsToggle:$('#fullscreenToggle')
+};
+
+const storeKey='szokartyak-allapot-v2';
+let state=JSON.parse(localStorage.getItem(storeKey)||'{}'),activeTopic='Mind',index=0,flipped=false;
+
+function save(){localStorage.setItem(storeKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+function topics(){return ['Mind','Personal details','Clothes','Appearance','Character and personality']}
+
+function filteredCards(){
+  const q=els.search.value.trim().toLowerCase();
+  return cards.filter(c=>(activeTopic==='Mind'||c.topic===activeTopic)&&(!q||`${c.en} ${c.hu} ${c.topic}`.toLowerCase().includes(q))).map(c=>c);
+}
+
+function frontBack(c){return els.direction.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+function currentCard(){const l=filteredCards();if(index>=l.length)index=Math.max(0,l.length-1);return l[index]}
+
+function mark(kind){
+  const c=currentCard();if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[kind]:true};
+  if(kind==='known')state[c.id].hard=false;
+  if(kind==='hard')state[c.id].known=false;
+  save();nextCard();render();
+}
+
+function renderStats(){
+  const v=Object.values(state);
+  els.seenCount.textContent=v.filter(x=>x.seen).length;
+  els.knownCount.textContent=v.filter(x=>x.known).length;
+  els.hardCount.textContent=v.filter(x=>x.hard).length;
+}
+
+function renderFilters(){
+  els.filters.innerHTML='';
+  topics().forEach(t=>{
+    const b=document.createElement('button');
+    b.className='chip'+(t===activeTopic?' active':'');
+    b.textContent=t==='Mind'?`${t} (${cards.length})`:t;
+    b.onclick=()=>{activeTopic=t;index=0;flipped=false;render()};
+    els.filters.append(b);
+  });
+}
+
+function renderList(list){
+  els.wordList.innerHTML='';
+  list.forEach((c,pos)=>{
+    const r=document.createElement('button');
+    r.className='row';
+    r.innerHTML='<b>'+c.en+'</b><span>'+c.hu+'</span>';
+    r.onclick=()=>{index=pos;flipped=false;render()};
+    els.wordList.append(r);
+  });
+}
+
+function renderCard(list,c){
+  const ok=!!c;
+  els.empty.style.display=ok?'none':'block';
+  els.card.style.display=ok?'grid':'none';
+  els.quiz.style.display=ok&&els.mode.value==='quiz'?'grid':'none';
+  els.card.style.cursor=els.mode.value==='cards'?'pointer':'default';
+  if(!c)return;
+  const [front,back,label]=frontBack(c);
+  els.cardMeta.textContent=`${index+1} / ${list.length} - ${label} - ${c.topic}`;
+  els.term.textContent=flipped?back:front;
+  els.answer.textContent=flipped?front:'Kattints a fordításhoz';
+  els.progress.style.width=`${((index+1)/list.length)*100}%`;
+  state[c.id]={...(state[c.id]||{}),seen:true};
+  save();
+}
+
+function renderQuiz(c){
+  els.quiz.innerHTML='';if(!c||els.mode.value!=='quiz')return;
+  const [,correct]=frontBack(c);
+  const pool=cards.filter(x=>x.id!==c.id);
+  const choices=[correct,...shuffle(pool).slice(0,3).map(x=>els.direction.value==='en-hu'?x.hu:x.en)];
+  shuffle(choices).forEach(choice=>{
+    const b=document.createElement('button');
+    b.textContent=choice;
+    b.onclick=()=>{flipped=true;mark(choice===correct?'known':'hard')};
+    els.quiz.append(b);
+  });
+}
+
+function render(){
+  const list=filteredCards(),card=currentCard();
+  renderFilters();renderList(list);renderCard(list,card);renderQuiz(card);renderStats();
+}
+
+function nextCard(){const len=filteredCards().length;if(!len)return;index=(index+1)%len;flipped=false}
+
+els.card.onclick=()=>{if(els.mode.value==='cards'){flipped=!flipped;render()}};
+els.card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flipped=!flipped;render()}};
+els.flip.onclick=()=>{flipped=!flipped;render()};
+els.prev.onclick=()=>{const len=filteredCards().length;if(!len)return;index=(index-1+len)%len;flipped=false;render()};
+els.next.onclick=()=>{nextCard();render()};
+els.known.onclick=()=>mark('known');
+els.hard.onclick=()=>mark('hard');
+els.search.oninput=()=>{index=0;flipped=false;render()};
+els.mode.onchange=()=>{flipped=false;render()};
+els.direction.onchange=()=>{flipped=false;render()};
+
+els.fsToggle.onclick=()=>{
+  document.body.classList.toggle('fullscreen-mode');
+  if(document.body.classList.contains('fullscreen-mode')){
+    els.fsToggle.textContent = '⤝⤞';
+    els.fsToggle.title = 'Kilépés az egész képernyős módból';
+  } else {
+    els.fsToggle.textContent = '⤢';
+    els.fsToggle.title = 'Egész képernyős mód';
+  }
+};
+
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){nextCard();render()}
+  if(e.key==='ArrowLeft')els.prev.click();
+  if(e.key===' '){e.preventDefault();els.flip.click()}
+};
+
+render();
+</script></body></html>

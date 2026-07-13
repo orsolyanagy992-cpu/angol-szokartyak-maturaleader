@@ -1,0 +1,238 @@
+<!doctype html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Szótanuló - Unit 4</title><style>
+:root{--ink:#292524;--muted:#78716c;--line:#e7e5e4;--panel:#fff;--yellow:#ca8a04;--yellow-light:#fef9c3;--green:#16a34a;--red:#b42318}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Arial,sans-serif;color:var(--ink);background:#fefce8;padding:16px}
+main{width:min(1100px,100%);margin:0 auto}header{display:flex;flex-wrap:wrap;justify-content:between;align-items:center;gap:12px;margin-bottom:16px}
+h1{margin:0;font-size:28px}.stats{display:flex;gap:8px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 12px;text-align:center;font-size:13px}
+.stat b{display:block;font-size:18px}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:16px}
+input,select,button{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:0 10px;font:inherit}
+button{cursor:pointer;transition:background .1s}button:hover{background:#fefce8}button.primary{background:var(--yellow);color:#fff;border-color:var(--yellow)}
+button.good{background:#eafaf1;color:var(--green);border-color:#afe0bd}button.hard{background:#fff1ed;color:var(--red);border-color:#fac7bd}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:16px}@media(max-width:800px){.layout,.toolbar{grid-template-columns:1fr}}
+.study{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;box-shadow:0 4px 12px rgba(202,138,4,0.05)}
+.progress{height:8px;background:#e7ebf2;border-radius:4px;overflow:hidden;margin-bottom:12px}
+.progress span{display:block;height:100%;width:0;background:var(--yellow);transition:width .2s}
+.card{position:relative;display:grid;place-items:center;min-height:260px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:20px;text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 0 40px rgba(202,138,4,0.02)}
+.card small{position:absolute;top:8px;left:10px;color:var(--muted);font-size:11px;font-weight:700}
+.term{font-size:30px;font-weight:700;line-height:1.2;margin-bottom:8px}.answer{color:var(--muted);font-size:16px}
+.actions{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}@media(max-width:500px){.actions{grid-template-columns:repeat(2,1fr)}.actions .primary{grid-column:span 2}}
+.quiz{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}aside{display:grid;gap:12px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.box h2{margin:0 0 8px;font-size:15px}.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:12px;background:#fefce8;border:1px solid var(--line);cursor:pointer}
+.chip.active{background:#fef9c3;color:#a16207;border-color:#fef08a}
+.list{max-height:280px;overflow-y:auto;display:grid;gap:4px}
+.row{border:1px solid var(--line);border-radius:6px;padding:6px;background:#fff;cursor:pointer;text-align:left;font-size:13px}
+.row b{display:block;color:var(--ink)}.row span{color:var(--muted)}
+body.fullscreen-mode{padding:0}body.fullscreen-mode main{width:min(800px,calc(100% - 32px));padding-top:40px}body.fullscreen-mode header,body.fullscreen-mode aside{display:none!important}body.fullscreen-mode .layout{grid-template-columns:1fr}.fullscreen-btn{min-height:38px;border:1px solid var(--line);border-radius:6px;background:var(--panel);cursor:pointer;font-size:20px;padding:0 12px}</style></head><body><main><header><h1>Unit 4 - Work and Employment</h1><section class="stats"><div class="stat"><b id="sC">0</b><span>átvett</span></div><div class="stat"><b id="kC">0</b><span>tudom</span></div><div class="stat"><b id="hC">0</b><span>gyakorlom</span></div></section><button id="fullscreenToggle" class="fullscreen-btn">⤢</button></header><section class="toolbar"><input id="search" type="search" placeholder="Keresés..."><select id="mode"><option value="cards">Kártyák</option><option value="quiz">Feleletválasztós</option></select><select id="direction"><option value="en-hu">Angol -> Magyar</option><option value="hu-en">Magyar -> Angol</option></select></section><section class="layout"><div><section class="study"><div class="progress"><span id="prog"></span></div><article id="card" class="card" tabindex="0"><small id="meta"></small><div><div id="term" class="term"></div><div id="ans" class="answer"></div></div></article><div id="quiz" class="quiz"></div><div class="actions"><button id="prev">Előző</button><button id="flip" class="primary">Fordítás</button><button id="next">Köv.</button><button id="bH" class="hard">Gyakorolni</button><button id="bK" class="good">Tudom</button></div></section></div><aside><section class="box"><h2>Témakörök</h2><div class="chips" id="filters"></div></section><section class="box"><h2>Szólista</h2><div class="list" id="wList"></div></section></aside></section></main><script>
+const cards=[
+  {"id":0,"en":"chemist","hu":"gyógyszerész","topic":"Jobs / Professions"},
+  {"id":1,"en":"IT specialist","hu":"IT szakember","topic":"Jobs / Professions"},
+  {"id":2,"en":"computer programmer","hu":"programozó","topic":"Jobs / Professions"},
+  {"id":3,"en":"dentist","hu":"fogorvos","topic":"Jobs / Professions"},
+  {"id":4,"en":"journalist","hu":"újságíró","topic":"Jobs / Professions"},
+  {"id":5,"en":"pharmacist","hu":"patikus","topic":"Jobs / Professions"},
+  {"id":6,"en":"recepcionist","hu":"recepciós","topic":"Jobs / Professions"},
+  {"id":7,"en":"businessman / businesswoman","hu":"üzletember","topic":"Jobs / Professions"},
+  {"id":8,"en":"fireman / firefighter","hu":"tűzoltó","topic":"Jobs / Professions"},
+  {"id":9,"en":"fisherman","hu":"halász","topic":"Jobs / Professions"},
+  {"id":10,"en":"policeman","hu":"rendőr","topic":"Jobs / Professions"},
+  {"id":11,"en":"postman / mailman","hu":"postás","topic":"Jobs / Professions"},
+  {"id":12,"en":"salesman","hu":"értékesítő","topic":"Jobs / Professions"},
+  {"id":13,"en":"baker","hu":"pék","topic":"Jobs / Professions"},
+  {"id":14,"en":"barber","hu":"borbély","topic":"Jobs / Professions"},
+  {"id":15,"en":"cashier","hu":"pénztáros","topic":"Jobs / Professions"},
+  {"id":16,"en":"manager","hu":"menedzser","topic":"Jobs / Professions"},
+  {"id":17,"en":"driver","hu":"sofőr","topic":"Jobs / Professions"},
+  {"id":18,"en":"engineer","hu":"mérnök","topic":"Jobs / Professions"},
+  {"id":19,"en":"farmer","hu":"gazda","topic":"Jobs / Professions"},
+  {"id":20,"en":"fishmonger","hu":"halárus","topic":"Jobs / Professions"},
+  {"id":21,"en":"hairdresser","hu":"fodrász","topic":"Jobs / Professions"},
+  {"id":22,"en":"police officer","hu":"rendőrtiszt","topic":"Jobs / Professions"},
+  {"id":23,"en":"waiter","hu":"pincér","topic":"Jobs / Professions"},
+  {"id":24,"en":"actor","hu":"színész","topic":"Jobs / Professions"},
+  {"id":25,"en":"director","hu":"igazgató, rendező","topic":"Jobs / Professions"},
+  {"id":26,"en":"actress","hu":"színésznő","topic":"Jobs / Professions"},
+  {"id":27,"en":"waitress","hu":"pincérmő","topic":"Jobs / Professions"},
+  {"id":28,"en":"electrician","hu":"villanyszerelő","topic":"Jobs / Professions"},
+  {"id":29,"en":"musician","hu":"zenész","topic":"Jobs / Professions"},
+  {"id":30,"en":"optician","hu":"látszerész","topic":"Jobs / Professions"},
+  {"id":31,"en":"politician","hu":"politikus","topic":"Jobs / Professions"},
+  {"id":32,"en":"beautician","hu":"kozmetikus","topic":"Jobs / Professions"},
+  {"id":33,"en":"librarian","hu":"könyvtáros","topic":"Jobs / Professions"},
+  {"id":34,"en":"accountant","hu":"könyvelő","topic":"Jobs / Professions"},
+  {"id":35,"en":"flight attendant","hu":"légikísérő","topic":"Jobs / Professions"},
+  {"id":36,"en":"estate-agent","hu":"ingatlanügynök","topic":"Jobs / Professions"},
+  {"id":37,"en":"insurance agent","hu":"biztosítási ügynök","topic":"Jobs / Professions"},
+  {"id":38,"en":"travel agent","hu":"utazási ügynök","topic":"Jobs / Professions"},
+  {"id":39,"en":"architect","hu":"építész","topic":"Jobs / Professions"},
+  {"id":40,"en":"cook","hu":"szakács","topic":"Jobs / Professions"},
+  {"id":41,"en":"judge","hu":"bíró","topic":"Jobs / Professions"},
+  {"id":42,"en":"lawyer","hu":"jogász","topic":"Jobs / Professions"},
+  {"id":43,"en":"surgeon","hu":"sebész","topic":"Jobs / Professions"},
+  {"id":44,"en":"mechanic","hu":"szerelő","topic":"Jobs / Professions"},
+  {"id":45,"en":"nurse","hu":"nővér","topic":"Jobs / Professions"},
+  {"id":46,"en":"vet","hu":"állatorvos","topic":"Jobs / Professions"},
+  {"id":47,"en":"priest","hu":"pap","topic":"Jobs / Professions"},
+  {"id":48,"en":"secretary","hu":"titkárnő","topic":"Jobs / Professions"},
+  {"id":49,"en":"highly-paid job / well-paid job","hu":"jól fizetett munka","topic":"Kinds of jobs"},
+  {"id":50,"en":"full-time job","hu":"teljes munkaidős munka","topic":"Kinds of jobs"},
+  {"id":51,"en":"permanent job","hu":"állandó állás","topic":"Kinds of jobs"},
+  {"id":52,"en":"dead-end job","hu":"kilátástalan állás","topic":"Kinds of jobs"},
+  {"id":53,"en":"contract work","hu":"szerződéses munka","topic":"Kinds of jobs"},
+  {"id":54,"en":"summer job","hu":"nyári munka","topic":"Kinds of jobs"},
+  {"id":55,"en":"low-paid job / badly-paid job","hu":"rosszul fizetett munka","topic":"Kinds of jobs"},
+  {"id":56,"en":"part-time job","hu":"részmunkaidő","topic":"Kinds of jobs"},
+  {"id":57,"en":"temporary job","hu":"ideiglenes állás","topic":"Kinds of jobs"},
+  {"id":58,"en":"a job with a future","hu":"fejlődést biztosító állás","topic":"Kinds of jobs"},
+  {"id":59,"en":"seasonal work","hu":"idénymunka","topic":"Kinds of jobs"},
+  {"id":60,"en":"physical","hu":"fizikai","topic":"Describing a job/ employee/ employer"},
+  {"id":61,"en":"stressful","hu":"stresszes","topic":"Describing a job/ employee/ employer"},
+  {"id":62,"en":"tiring, back-breaking","hu":"fárasztó, kimerítő","topic":"Describing a job/ employee/ employer"},
+  {"id":63,"en":"skilled","hu":"szakképzett","topic":"Describing a job/ employee/ employer"},
+  {"id":64,"en":"time-consuming","hu":"időigényes","topic":"Describing a job/ employee/ employer"},
+  {"id":65,"en":"responsible","hu":"felelősségteljes","topic":"Describing a job/ employee/ employer"},
+  {"id":66,"en":"committed","hu":"elkötelezett","topic":"Describing a job/ employee/ employer"},
+  {"id":67,"en":"qualified","hu":"végzettséggel rendelkezik","topic":"Describing a job/ employee/ employer"},
+  {"id":68,"en":"experienced / inexperienced","hu":"tapasztalt / tapasztalatlan","topic":"Describing a job/ employee/ employer"},
+  {"id":69,"en":"mental","hu":"szellemi","topic":"Describing a job/ employee/ employer"},
+  {"id":70,"en":"dangerous","hu":"veszélyes","topic":"Describing a job/ employee/ employer"},
+  {"id":71,"en":"monotonous","hu":"egyhangú","topic":"Describing a job/ employee/ employer"},
+  {"id":72,"en":"unskilled","hu":"szakképzetlen","topic":"Describing a job/ employee/ employer"},
+  {"id":73,"en":"satisfying","hu":"felelősségteljes","topic":"Describing a job/ employee/ employer"},
+  {"id":74,"en":"competent","hu":"megfelelő","topic":"Describing a job/ employee/ employer"},
+  {"id":75,"en":"devoted dedicated","hu":"odaadó/elszánt","topic":"Describing a job/ employee/ employer"},
+  {"id":76,"en":"precise","hu":"precíz","topic":"Describing a job/ employee/ employer"},
+  {"id":77,"en":"apply for a job / a post","hu":"állásra jelentkezni","topic":"Employment"},
+  {"id":78,"en":"employed / unemployed","hu":"alkalmazott / munkanélküli","topic":"Employment"},
+  {"id":79,"en":"employee","hu":"alkalmazott","topic":"Employment"},
+  {"id":80,"en":"unemployment","hu":"munkanélküliség","topic":"Employment"},
+  {"id":81,"en":"change a job","hu":"állást vált","topic":"Employment"},
+  {"id":82,"en":"day / night shift","hu":"nappali/éjjeli műszak","topic":"Employment"},
+  {"id":83,"en":"working hours","hu":"munkaidő","topic":"Employment"},
+  {"id":84,"en":"get a pay rise","hu":"fizetésemelést kap","topic":"Employment"},
+  {"id":85,"en":"get sacked","hu":"felmondanak valakinek","topic":"Employment"},
+  {"id":86,"en":"resign from a job","hu":"felmondani","topic":"Employment"},
+  {"id":87,"en":"sign a contract","hu":"szerződést aláír","topic":"Employment"},
+  {"id":88,"en":"workaholic","hu":"munkamániás","topic":"Employment"},
+  {"id":89,"en":"wages / salary","hu":"fizetés","topic":"Employment"},
+  {"id":90,"en":"income tax","hu":"jövedelmi adó","topic":"Employment"},
+  {"id":91,"en":"labour market","hu":"munkaerő piac","topic":"Employment"},
+  {"id":92,"en":"pensioner","hu":"nyugdíjas","topic":"Employment"},
+  {"id":93,"en":"earn, make a living","hu":"pénzt keresni","topic":"Employment"},
+  {"id":94,"en":"curriculum vitae (CV)","hu":"önéletrajz","topic":"Employment"},
+  {"id":95,"en":"application","hu":"jelentkezés","topic":"Employment"},
+  {"id":96,"en":"employ","hu":"alkalmaz","topic":"Employment"},
+  {"id":97,"en":"employer","hu":"munkaadó","topic":"Employment"},
+  {"id":98,"en":"unemployment rate","hu":"munkanélküliségi ráta","topic":"Employment"},
+  {"id":99,"en":"employment centre","hu":"munkaügyi központ","topic":"Employment"},
+  {"id":100,"en":"work in shifts","hu":"műszakban dolgozik","topic":"Employment"},
+  {"id":101,"en":"get a commission","hu":"jutalékot kap","topic":"Employment"},
+  {"id":102,"en":"get a promotion / get promoted","hu":"előléptetésben részesül","topic":"Employment"},
+  {"id":103,"en":"fire / dismiss, make sb redundant","hu":"kirúgni valakit","topic":"Employment"},
+  {"id":104,"en":"self-employed","hu":"vállalkozó","topic":"Employment"},
+  {"id":105,"en":"workmate / colleague","hu":"kolléga","topic":"Employment"},
+  {"id":106,"en":"work overtime, do overtime","hu":"túlórázik","topic":"Employment"},
+  {"id":107,"en":"qualification","hu":"képesítés","topic":"Employment"},
+  {"id":108,"en":"work experience","hu":"munkatapasztalat","topic":"Employment"},
+  {"id":109,"en":"pension","hu":"nyugdíj","topic":"Employment"},
+  {"id":110,"en":"have a day off","hu":"szabadnapot vesz ki","topic":"Employment"},
+  {"id":111,"en":"do voluntary work","hu":"önkéntes munkát végez","topic":"Employment"}
+];
+
+const $=q=>document.querySelector(q);
+const els={
+  s: $('#search'), m: $('#mode'), d: $('#direction'), f: $('#filters'), wl: $('#wList'),
+  c: $('#card'), mt: $('#meta'), tm: $('#term'), an: $('#ans'), qz: $('#quiz'),
+  pr: $('#prog'), sC: $('#sC'), kC: $('#kC'), hC: $('#hC'), fs: $('#fullscreenToggle')
+};
+
+let state={}, activeT='Mind', idx=0, flipped=false;
+const sKey='szokartyak-u4-st';
+try{state=JSON.parse(localStorage.getItem(sKey))||{}}catch(e){state={}}
+function save(){localStorage.setItem(sKey,JSON.stringify(state))}
+function shuffle(a){const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c}
+
+function getFiltered(){
+  const q=els.s.value.trim().toLowerCase();
+  return cards.filter(c=>(activeT==='Mind'||c.topic===activeT)&&(!q||`${c.en} ${c.hu}`.toLowerCase().includes(q)));
+}
+function getFB(c){return els.d.value==='en-hu'?[c.en,c.hu,'Angol']:[c.hu,c.en,'Magyar']}
+
+function mark(k){
+  const c=getFiltered()[idx];if(!c)return;
+  state[c.id]={...(state[c.id]||{}),seen:true,[k]:true};
+  if(k==='known')state[c.id].hard=false;
+  if(k==='hard')state[c.id].known=false;
+  save();next();render();
+}
+
+function render(){
+  const list=getFiltered(), c=list[idx]||list[0];
+  if(list.length&&idx>=list.length)idx=0;
+  
+  // Szűrők (Pontosan a táblázatok feletti címek)
+  els.f.innerHTML='';
+  ["Mind","Jobs / Professions","Kinds of jobs","Describing a job/ employee/ employer","Employment"].forEach(t=>{
+    const b=document.createElement('button');b.className='chip'+(t===activeT?' active':'');
+    b.textContent=t==='Mind'?`Mind (${cards.length})`:t;
+    b.onclick=()=>{activeT=t;idx=0;flipped=false;render()};els.f.append(b);
+  });
+
+  // Lista
+  els.wl.innerHTML='';
+  list.forEach((w,p)=>{
+    const r=document.createElement('button');r.className='row';
+    r.innerHTML=`<b>${w.en}</b><span>${w.hu}</span>`;
+    r.onclick=()=>{idx=p;flipped=false;render()};els.wl.append(r);
+  });
+
+  // Kártya
+  if(!list.length){
+    els.tm.textContent='Nincs találat';els.an.textContent='';els.mt.textContent='';
+    els.qz.innerHTML='';els.pr.style.width='0%';return;
+  }
+  const [f,b,l]=getFB(c);
+  els.mt.textContent=`${idx+1} / ${list.length} - ${l} [${c.topic}]`;
+  els.tm.textContent=flipped?b:f;
+  els.an.textContent=flipped?f:'Kattints ide a fordításhoz';
+  els.pr.style.width=`${((idx+1)/list.length)*100}%`;
+  
+  state[c.id]={...(state[c.id]||{}),seen:true};save();
+
+  // Kvíz mód
+  els.qz.innerHTML='';
+  if(els.m.value==='quiz'){
+    els.qz.style.display='grid';els.c.style.cursor='default';
+    const pool=cards.filter(x=>x.id!==c.id);
+    const choices=shuffle([b,...shuffle(pool).slice(0,3).map(x=>els.d.value==='en-hu'?x.hu:x.en)]);
+    choices.forEach(ch=>{
+      const btn=document.createElement('button');btn.textContent=ch;
+      btn.onclick=()=>{flipped=true;mark(ch===b?'known':'hard')};els.qz.append(btn);
+    });
+  }else{els.qz.style.display='none';els.c.style.cursor='pointer'}
+
+  // Statisztika
+  const v=Object.values(state);
+  els.sC.textContent=v.filter(x=>x.seen).length;
+  els.kC.textContent=v.filter(x=>x.known).length;
+  els.hC.textContent=v.filter(x=>x.hard).length;
+}
+
+function next(){const len=getFiltered().length;if(len)idx=(idx+1)%len;flipped=false}
+els.c.onclick=()=>{if(els.m.value==='cards'){flipped=!flipped;render()}};
+$('#flip').onclick=()=>{flipped=!flipped;render()};
+$('#next').onclick=()=>{next();render()};
+$('#prev').onclick=()=>{const len=getFiltered().length;if(len)idx=(idx-1+len)%len;flipped=false;render()};
+$('#bK').onclick=()=>mark('known');$('#bH').onclick=()=>mark('hard');
+els.s.oninput=()=>{idx=0;flipped=false;render()};
+els.m.onchange=els.d.onchange=()=>{flipped=false;render()};
+
+els.fs.onclick=()=>{document.body.classList.toggle('fullscreen-mode');els.fs.textContent=document.body.classList.contains('fullscreen-mode')?'⤝⤞':'⤢';};
+document.onkeydown=e=>{
+  if(e.target.matches('input,select'))return;
+  if(e.key==='ArrowRight'){next();render()}
+  if(e.key==='ArrowLeft')$('#prev').click();
+  if(e.key===' '){e.preventDefault();$('#flip').click()}
+};
+render();
+</script></body></html>
